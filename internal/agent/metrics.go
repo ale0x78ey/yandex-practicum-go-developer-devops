@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"log"
 	"math/rand"
 	"runtime"
 )
@@ -184,7 +185,7 @@ type Metrics struct {
 	// it all was at some point.
 	Sys Gauge
 
-	// PollCount is the number of polls.
+	// PollCount is the number of previous polls.
 	PollCount Counter
 
 	// RandomValue is just a random value.
@@ -230,4 +231,15 @@ func makeMetrics(pollCount Counter) Metrics {
 	}
 	metrics.feelMemStats()
 	return metrics
+}
+
+type MetricsConsumer interface {
+	Consume(*Metrics)
+}
+
+type MetricsConsumerFunc func(*Metrics)
+
+func (f MetricsConsumerFunc) Consume(metrics *Metrics) {
+	log.Print("Metrics: Consume")
+	f(metrics)
 }

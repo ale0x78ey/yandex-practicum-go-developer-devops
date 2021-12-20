@@ -11,26 +11,18 @@ import (
 	mag "github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/agent"
 )
 
-func processMetrics(metrics *mag.Metrics) {
-	if metrics == nil {
-		panic("The agent passed a nil object.")
-	}
-
-	log.Printf("Process metrics with PollCount=%v rand=%v", metrics.PollCount, metrics.RandomValue)
-}
+const (
+	pollInterval   = 2 * time.Second
+	reportInterval = 10 * time.Second
+	serverHost     = "127.0.0.1"
+	serverPort     = "8080"
+)
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
-	agent, err := mag.NewAgent(mag.Config{
-		PollInterval: 2 * time.Second,
-	})
-	if err != nil {
-		log.Fatalf("Failed to create an agent: %v", err)
-	}
-
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
 		syscall.SIGINT,
@@ -39,7 +31,29 @@ func main() {
 	)
 	defer stop()
 
-	if err := agent.Run(ctx, mag.ConsumerFunc(processMetrics)); err != nil {
+	agent, err := mag.NewAgent(mag.AgentConfig{
+		PollInterval: pollInterval,
+	})
+	if err != nil {
+		log.Fatalf("Failed to create an agent: %v", err)
+	}
+
+	client, err := mag.NewClient(mag.ClientConfig{
+		ServerHost:     serverHost,
+		ServerPort:     serverPort,
+		ReportInterval: reportInterval,
+	})
+	if err != nil {
+		log.Fatalf("Failed to create an agent client: %v", err)
+	}
+
+	go func() {
+		if err := client.Run(ctx); err != nil {
+			log.Fatalf("Agent failed: %v", err)
+		}
+	}()
+
+	if err := agent.Run(ctx, mag.MetricsConsumerFunc(client.UpdateMetrics)); err != nil {
 		log.Fatalf("Agent failed: %v", err)
 	}
 }
