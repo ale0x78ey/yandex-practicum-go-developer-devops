@@ -12,10 +12,12 @@ import (
 )
 
 const (
-	pollInterval   = 2 * time.Second
-	reportInterval = 10 * time.Second
-	serverHost     = "127.0.0.1"
-	serverPort     = "8080"
+	pollInterval        = 2 * time.Second
+	reportInterval      = 10 * time.Second
+	serverHost          = "127.0.0.1"
+	serverPort          = "8080"
+	maxIdleConns        = 100
+	maxIdleConnsPerHost = 100
 )
 
 func init() {
@@ -39,9 +41,11 @@ func main() {
 	}
 
 	client, err := mag.NewClient(mag.ClientConfig{
-		ServerHost:     serverHost,
-		ServerPort:     serverPort,
-		ReportInterval: reportInterval,
+		ServerHost:          serverHost,
+		ServerPort:          serverPort,
+		ReportInterval:      reportInterval,
+		MaxIdleConns:        maxIdleConns,
+		MaxIdleConnsPerHost: maxIdleConnsPerHost,
 	})
 	if err != nil {
 		log.Fatalf("Failed to create an agent client: %v", err)

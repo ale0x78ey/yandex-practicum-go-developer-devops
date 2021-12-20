@@ -12,7 +12,7 @@ type AgentConfig struct {
 }
 
 type Agent interface {
-	Run(ctx context.Context, consumer MetricsConsumer) error
+	Run(ctx context.Context, consumers ...MetricsConsumer) error
 }
 
 type agent struct {
@@ -20,8 +20,8 @@ type agent struct {
 	pollCount Counter
 }
 
-func (a *agent) Run(ctx context.Context, consumer MetricsConsumer) error {
-	log.Print("Agent: Run")
+func (a *agent) Run(ctx context.Context, consumers ...MetricsConsumer) error {
+	log.Print("Agent.Run")
 	if a.config.PollInterval <= 0 {
 		msg := "Invalid non-positive PollInterval=%v"
 		return fmt.Errorf(msg, a.config.PollInterval)
@@ -33,9 +33,11 @@ func (a *agent) Run(ctx context.Context, consumer MetricsConsumer) error {
 		case <-ticker.C:
 			metrics := makeMetrics(a.pollCount)
 			a.pollCount++
-			consumer.Consume(&metrics)
+			for _, consumer := range consumers {
+				consumer.Consume(&metrics)
+			}
 		case <-ctx.Done():
-			log.Printf("Agent: %v", ctx.Err())
+			log.Printf("Agent.Run done: %v", ctx.Err())
 			return nil
 		}
 	}
