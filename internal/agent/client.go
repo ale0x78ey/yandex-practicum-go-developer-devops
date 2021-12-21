@@ -76,7 +76,7 @@ func (c *client) post(ctx context.Context, url string) error {
 func (c *client) sendGauge(ctx context.Context, name string, value Gauge) {
 	go func() {
 		url := fmt.Sprintf(
-			"https://%s:%s/update/gauge/%s/%v",
+			"http://%s:%s/update/gauge/%s/%v",
 			c.config.ServerHost,
 			c.config.ServerPort,
 			name, value,
@@ -90,7 +90,7 @@ func (c *client) sendGauge(ctx context.Context, name string, value Gauge) {
 func (c *client) sendCounter(ctx context.Context, name string, value Counter) {
 	go func() {
 		url := fmt.Sprintf(
-			"https://%s:%s/update/counter/%s/%v",
+			"http://%s:%s/update/counter/%s/%v",
 			c.config.ServerHost,
 			c.config.ServerPort,
 			name, value,
