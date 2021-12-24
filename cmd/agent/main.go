@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	mag "github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/agent"
+	mag "github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/agent"
 )
 
 const (
@@ -34,30 +34,18 @@ func main() {
 	defer stop()
 
 	agent, err := mag.NewAgent(mag.AgentConfig{
-		PollInterval: pollInterval,
+		PollInterval:        pollInterval,
+		ReportInterval:      reportInterval,
+		ServerHost:          serverHost,
+		ServerPort:          serverPort,
+		MaxIdleConns:        maxIdleConns,
+		MaxIdleConnsPerHost: maxIdleConnsPerHost,
 	})
 	if err != nil {
 		log.Fatalf("Failed to create an agent: %v", err)
 	}
 
-	client, err := mag.NewClient(mag.ClientConfig{
-		ServerHost:          serverHost,
-		ServerPort:          serverPort,
-		ReportInterval:      reportInterval,
-		MaxIdleConns:        maxIdleConns,
-		MaxIdleConnsPerHost: maxIdleConnsPerHost,
-	})
-	if err != nil {
-		log.Fatalf("Failed to create an agent client: %v", err)
-	}
-
-	go func() {
-		if err := client.Run(ctx); err != nil {
-			log.Fatalf("Agent failed: %v", err)
-		}
-	}()
-
-	if err := agent.Run(ctx, mag.MetricsConsumerFunc(client.UpdateMetrics)); err != nil {
-		log.Fatalf("Agent failed: %v", err)
+	if err := agent.Run(ctx); err != nil {
+		log.Fatalf("Failed to run an agent: %v", err)
 	}
 }
