@@ -72,7 +72,7 @@ func (a *agent) post(ctx context.Context, url string) {
 		return
 	}
 
-	request.Header.Set("Content-Type", "text/html; charset=utf-8")
+	request.Header.Set("Content-Type", "text/plain")
 	if _, err = a.client.Do(request); err != nil {
 		log.Printf("Agent.post %s error: %v", url, err)
 	}

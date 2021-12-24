@@ -15,6 +15,14 @@ func (f updateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ct := r.Header.Get("Content-Type")
+	if ct != "text/plain" {
+		code := http.StatusUnsupportedMediaType
+		http.Error(w, "Only text/plain Content-Type is allowed!", code)
+		return
+	}
+
+	defer r.Body.Close()
 	_, err := io.ReadAll(r.Body)
 	if err != nil {
 		code := http.StatusInternalServerError
