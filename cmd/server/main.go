@@ -27,8 +27,8 @@ func main() {
 	)
 	defer stop()
 
-	restServer := rest.NewServer()
-	if restServer == nil {
+	restServer, err := rest.NewServer()
+	if err != nil {
 		log.Fatal("Server failed: REST Server wasn't created")
 	}
 

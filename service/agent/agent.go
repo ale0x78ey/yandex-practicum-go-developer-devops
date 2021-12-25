@@ -42,6 +42,10 @@ func (a *agent) Run(ctx context.Context) error {
 		msg := "Invalid non-positive PollInterval=%v"
 		return fmt.Errorf(msg, a.config.PollInterval)
 	}
+	if a.config.ReportInterval <= 0 {
+		msg := "Invalid non-positive ReportInterval=%v"
+		return fmt.Errorf(msg, a.config.ReportInterval)
+	}
 
 	pollTicker := time.NewTicker(a.config.PollInterval)
 	sendTicker := time.NewTicker(a.config.ReportInterval)

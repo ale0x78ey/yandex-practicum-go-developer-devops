@@ -11,8 +11,9 @@ type Server interface {
 type server struct {
 }
 
-func NewServer() *server {
-	return &server{}
+func NewServer() (Server, error) {
+	newServer := &server{}
+	return newServer, nil
 }
 
 func (s *server) UpdateAllocHandler(value string) {
