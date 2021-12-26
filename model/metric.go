@@ -6,25 +6,19 @@ import (
 )
 
 type (
-	Metric interface {
-		Type() MetricType
-		Name() MetricName
-		StringValue() string
-	}
-
-	Gauge struct {
-		Value float64
-		name  MetricName
-	}
-
-	Counter struct {
-		Value int64
-		name  MetricName
-	}
-
+	Gauge      int64
+	Counter    float64
 	MetricName string
 	MetricType string
 )
+
+func (g Gauge) String() string {
+	return strconv.FormatFloat(float64(g), 'E', -1, 64)
+}
+
+func (c Counter) String() string {
+	return strconv.FormatInt(int64(c), 10)
+}
 
 const (
 	MetricTypeGauge   MetricType = "gauge"
@@ -38,6 +32,10 @@ func (t MetricType) Validate() error {
 	default:
 		return fmt.Errorf("unkown MetricType: %s", t)
 	}
+}
+
+func (t MetricType) String() string {
+	return string(t)
 }
 
 const (
@@ -108,42 +106,6 @@ func (n MetricName) Validate() error {
 	}
 }
 
-func (g Gauge) Type() MetricType {
-	return "gauge"
-}
-
-func (g Gauge) Name() MetricName {
-	return g.name
-}
-
-func (g Gauge) StringValue() string {
-	return strconv.FormatFloat(g.Value, 'E', -1, 64)
-}
-
-func GaugeFromFloat64(name string, value float64) Gauge {
-	return Gauge{name: MetricName(name), Value: value}
-}
-
-func GaugeFromUInt32(name string, value uint32) Gauge {
-	return Gauge{name: MetricName(name), Value: float64(value)}
-}
-
-func GaugeFromUInt64(name string, value uint64) Gauge {
-	return Gauge{name: MetricName(name), Value: float64(value)}
-}
-
-func (c Counter) Type() MetricType {
-	return "counter"
-}
-
-func (c Counter) Name() MetricName {
-	return c.name
-}
-
-func (c Counter) StringValue() string {
-	return strconv.FormatInt(c.Value, 10)
-}
-
-func CounterFromInt64(name string, value int64) Counter {
-	return Counter{name: MetricName(name), Value: value}
+func (n MetricName) String() string {
+	return string(n)
 }

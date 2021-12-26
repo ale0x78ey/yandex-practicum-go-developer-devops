@@ -20,17 +20,7 @@ const (
 	port            = "80"
 )
 
-type config struct {
-	ShutdownTimeout time.Duration
-	Host            string
-	Port            string
-}
-
-func runServer(ctx context.Context, config *config) error {
-	if config == nil {
-		return errors.New("invalid config=nil")
-	}
-
+func runServer(ctx context.Context) error {
 	srv := server.NewServer()
 	api := rest.Init(srv)
 	if api == nil {
@@ -41,7 +31,7 @@ func runServer(ctx context.Context, config *config) error {
 	api.InitMetric()
 
 	httpServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", config.Host, config.Port),
+		Addr:    fmt.Sprintf("%s:%s", host, port),
 		Handler: api.Routes.Root,
 	}
 
@@ -49,7 +39,7 @@ func runServer(ctx context.Context, config *config) error {
 		for {
 			select {
 			case <-ctx.Done():
-				ctx, _ := context.WithTimeout(context.Background(), config.ShutdownTimeout)
+				ctx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
 				if err := httpServer.Shutdown(ctx); err != nil {
 					log.Fatalf("Server failed: %v", err)
 				}
@@ -75,13 +65,7 @@ func main() {
 	)
 	defer stop()
 
-	config := &config{
-		ShutdownTimeout: shutdownTimeout,
-		Host:            host,
-		Port:            port,
-	}
-
-	if err := runServer(ctx, config); err != nil {
+	if err := runServer(ctx); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
