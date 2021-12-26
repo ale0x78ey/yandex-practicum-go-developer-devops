@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 )
 
 const (
@@ -17,6 +19,52 @@ const (
 	host            = "0.0.0.0"
 	port            = "80"
 )
+
+type config struct {
+	ShutdownTimeout time.Duration
+	Host            string
+	Port            string
+}
+
+func runServer(ctx context.Context, config *config) error {
+	if config == nil {
+		return errors.New("invalid config=nil")
+	}
+
+	srv := server.NewServer()
+	api := rest.Init(srv)
+	if api == nil {
+		return errors.New("API wasn't created")
+	}
+
+	api.InitMiddleware()
+	api.InitMetric()
+
+	httpServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%s", config.Host, config.Port),
+		Handler: api.Routes.Root,
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				ctx, _ := context.WithTimeout(context.Background(), config.ShutdownTimeout)
+				if err := httpServer.Shutdown(ctx); err != nil {
+					log.Fatalf("Server failed: %v", err)
+				}
+				return
+			}
+		}
+	}()
+
+	err := httpServer.ListenAndServe()
+	if err == http.ErrServerClosed {
+		return nil
+	}
+
+	return err
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(
@@ -27,40 +75,13 @@ func main() {
 	)
 	defer stop()
 
-	restServer, err := rest.NewServer()
-	if err != nil {
-		log.Fatal("Server failed: REST Server wasn't created")
+	config := &config{
+		ShutdownTimeout: shutdownTimeout,
+		Host:            host,
+		Port:            port,
 	}
 
-	router := restServer.NewRouter()
-	if router == nil {
-		log.Fatal("Server failed: Router wasn't created")
-	}
-
-	httpServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", host, port),
-		Handler: router,
-	}
-
-	go func() {
-		err := httpServer.ListenAndServe()
-		if err == http.ErrServerClosed {
-			log.Print(err)
-			return
-		}
-		if err != nil {
-			log.Fatalf("Server failed: %v", err)
-		}
-	}()
-
-	for {
-		select {
-		case <-ctx.Done():
-			ctx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
-			if err := httpServer.Shutdown(ctx); err != nil {
-				log.Fatalf("Server failed: %v", err)
-			}
-			return
-		}
+	if err := runServer(ctx, config); err != nil {
+		log.Fatalf("Server failed: %v", err)
 	}
 }
