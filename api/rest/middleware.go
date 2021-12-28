@@ -25,9 +25,6 @@ func withServer(srv *server.Server) func(next http.Handler) http.Handler {
 }
 
 func (api *API) InitMiddleware() {
-	api.Routes.Root.Use(middleware.RequestID)
-	api.Routes.Root.Use(middleware.RealIP)
-	api.Routes.Root.Use(middleware.Logger)
 	api.Routes.Root.Use(middleware.Recoverer)
 	api.Routes.Root.Use(withServer(api.srv))
 }

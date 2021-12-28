@@ -62,7 +62,6 @@ func (a *Agent) Run(ctx context.Context) error {
 			ctx2, _ := context.WithTimeout(ctx, a.config.ReportInterval)
 			a.postMetrics(ctx2)
 		case <-ctx.Done():
-			log.Printf("Agent.Run done: %v", ctx.Err())
 			return nil
 		}
 	}
@@ -91,8 +90,6 @@ func (a *Agent) post(
 		_, err := request.Post(metricPostUrl)
 		if err != nil {
 			log.Printf("Agent.Post %s error: %v", request.URL, err)
-		} else {
-			log.Printf("Agent.Post %s", request.URL)
 		}
 	}()
 }

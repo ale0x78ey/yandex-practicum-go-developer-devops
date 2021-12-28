@@ -16,17 +16,17 @@ func TestGaugeString(t *testing.T) {
 		{
 			name:  "Gauge 0",
 			value: 0,
-			want:  "0E+00",
+			want:  "0",
 		},
 		{
 			name:  "Gauge minus 1",
 			value: -1,
-			want:  "-1E+00",
+			want:  "-1",
 		},
 		{
 			name:  "Gauge 1.5",
 			value: 1.507,
-			want:  "1.507E+00",
+			want:  "1.507",
 		},
 	}
 
@@ -36,6 +36,9 @@ func TestGaugeString(t *testing.T) {
 			assert.Equal(t, tt.want, value.String())
 		})
 	}
+}
+
+func TestGaugeFromString(t *testing.T) {
 }
 
 func TestCounterString(t *testing.T) {
@@ -67,6 +70,9 @@ func TestCounterString(t *testing.T) {
 			assert.Equal(t, tt.want, value.String())
 		})
 	}
+}
+
+func TestCounterFromString(t *testing.T) {
 }
 
 func TestMetricTypeValidate(t *testing.T) {

@@ -38,8 +38,8 @@ func TestRun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := agent{
-				config: AgentConfig{
+			a := Agent{
+				config: Config{
 					PollInterval:   tt.pollInterval,
 					ReportInterval: tt.reportInterval,
 				},
@@ -80,7 +80,7 @@ func TestPollMetrics_PollCount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := agent{
+			a := Agent{
 				data: metrics{
 					pollCount: tt.pollCount,
 				},
@@ -101,6 +101,5 @@ func TestSendMetrics(t *testing.T) {
 }
 
 func TestNewAgent(t *testing.T) {
-	_, err := NewAgent(AgentConfig{})
-	assert.NoError(t, err)
+	assert.NotNil(t, NewAgent(Config{}))
 }
