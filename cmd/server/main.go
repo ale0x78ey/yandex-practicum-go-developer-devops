@@ -18,7 +18,7 @@ const (
 	// TODO: https://github.com/spf13/viper
 	shutdownTimeout = 3 * time.Second
 	host            = "0.0.0.0"
-	port            = "80"
+	port            = "8080"
 )
 
 func runServer(ctx context.Context) error {
