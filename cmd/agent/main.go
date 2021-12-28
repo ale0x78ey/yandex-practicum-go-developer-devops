@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	// TODO: https://github.com/spf13/viper
 	pollInterval        = 2 * time.Second
 	reportInterval      = 10 * time.Second
 	serverHost          = "127.0.0.1"

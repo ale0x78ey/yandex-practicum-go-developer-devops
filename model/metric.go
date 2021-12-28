@@ -6,8 +6,8 @@ import (
 )
 
 type (
-	Gauge      int64
-	Counter    float64
+	Gauge      float64
+	Counter    int64
 	MetricName string
 	MetricType string
 )
@@ -16,8 +16,18 @@ func (g Gauge) String() string {
 	return strconv.FormatFloat(float64(g), 'E', -1, 64)
 }
 
+func GaugeFromString(value string) (Gauge, error) {
+	g, err := strconv.ParseFloat(value, 64)
+	return Gauge(g), err
+}
+
 func (c Counter) String() string {
 	return strconv.FormatInt(int64(c), 10)
+}
+
+func CounterFromString(value string) (Counter, error) {
+	c, err := strconv.Atoi(value)
+	return Counter(c), err
 }
 
 const (

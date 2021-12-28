@@ -1,19 +1,18 @@
 package server
 
 import (
-	"github.com/go-chi/chi/v5"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/psql"
 )
 
-type Routers struct {
-	Root   *chi.Mux
-	Metric *chi.Mux
-}
-
 type Server struct {
-	Routers Routers
+	MetricStorer storage.MetricStorer
 }
 
 func NewServer() *Server {
-	srv := &Server{}
+	metricStorer := psql.NewMetricStorer()
+	srv := &Server{
+		MetricStorer: metricStorer,
+	}
 	return srv
 }

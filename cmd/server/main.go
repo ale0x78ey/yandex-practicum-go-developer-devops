@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	// TODO: https://github.com/spf13/viper
 	shutdownTimeout = 3 * time.Second
 	host            = "0.0.0.0"
 	port            = "80"

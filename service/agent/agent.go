@@ -60,7 +60,7 @@ func (a *Agent) Run(ctx context.Context) error {
 			a.pollMetrics()
 		case <-sendTicker.C:
 			ctx2, _ := context.WithTimeout(ctx, a.config.ReportInterval)
-			a.sendMetrics(ctx2)
+			a.postMetrics(ctx2)
 		case <-ctx.Done():
 			log.Printf("Agent.Run done: %v", ctx.Err())
 			return nil
@@ -97,7 +97,7 @@ func (a *Agent) post(
 	}()
 }
 
-func (a *Agent) sendMetrics(ctx context.Context) {
+func (a *Agent) postMetrics(ctx context.Context) {
 	gauge := model.MetricTypeGauge
 	counter := model.MetricTypeCounter
 	m := &a.data.memStats
