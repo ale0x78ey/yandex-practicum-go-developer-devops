@@ -29,7 +29,7 @@ func TestMetricTypeValidator(t *testing.T) {
 			name: "Invalid MetricType",
 			path: "/smth/abrakadabra",
 			want: want{
-				code: http.StatusBadRequest,
+				code: http.StatusNotImplemented,
 			},
 		},
 	}

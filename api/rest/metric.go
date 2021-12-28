@@ -14,7 +14,7 @@ func metricTypeValidator(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		metricType := chi.URLParam(r, "metricType")
 		if err := model.MetricType(metricType).Validate(); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusNotImplemented)
 			return
 		}
 
@@ -111,7 +111,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 	case model.MetricTypeGauge:
 		value, err := srv.MetricStorer.LoadMetricGauge(ctx, metricName)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		strVal = value.String()
@@ -119,7 +119,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 	case model.MetricTypeCounter:
 		value, err := srv.MetricStorer.LoadMetricCounter(ctx, metricName)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		strVal = value.String()

@@ -13,7 +13,7 @@ type (
 )
 
 func (g Gauge) String() string {
-	return strconv.FormatFloat(float64(g), 'E', -1, 64)
+	return strconv.FormatFloat(float64(g), 'f', -1, 64)
 }
 
 func GaugeFromString(value string) (Gauge, error) {
