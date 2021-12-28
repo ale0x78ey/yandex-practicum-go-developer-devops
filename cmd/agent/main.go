@@ -16,7 +16,7 @@ const (
 	pollInterval        = 2 * time.Second
 	reportInterval      = 10 * time.Second
 	serverHost          = "127.0.0.1"
-	serverPort          = "80"
+	serverPort          = "8080"
 	maxIdleConns        = 15
 	maxIdleConnsPerHost = 15
 	retryCount          = 5
