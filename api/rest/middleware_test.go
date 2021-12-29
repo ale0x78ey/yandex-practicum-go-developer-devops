@@ -50,8 +50,8 @@ func TestWithMetricTypeValidator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response := doRequest(t, server, http.MethodGet, tt.path)
-			assert.Equal(t, tt.want.code, response.StatusCode)
+			statusCode := doRequest(t, server, http.MethodGet, tt.path)
+			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
 }
@@ -95,8 +95,8 @@ func TestWithMetricNameValidator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response := doRequest(t, server, http.MethodGet, tt.path)
-			assert.Equal(t, tt.want.code, response.StatusCode)
+			statusCode := doRequest(t, server, http.MethodGet, tt.path)
+			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
 }
@@ -148,8 +148,8 @@ func TestWithServer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response := doRequest(t, server, http.MethodGet, tt.path)
-			assert.Equal(t, tt.want.code, response.StatusCode)
+			statusCode := doRequest(t, server, http.MethodGet, tt.path)
+			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
 }

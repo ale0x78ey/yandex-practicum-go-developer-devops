@@ -16,7 +16,7 @@ import (
 
 const (
 	// TODO: https://github.com/spf13/viper
-	shutdownTimeout = 3 * time.Second
+	shutdownTimeout = 5 * time.Second
 	host            = "0.0.0.0"
 	port            = "8080"
 )
@@ -24,7 +24,7 @@ const (
 func runServer(ctx context.Context) error {
 	srv := server.NewServer()
 	if srv == nil {
-		return errors.New("Srv wasn't created")
+		return errors.New("srv wasn't created")
 	}
 
 	api := rest.Init(srv)
@@ -41,16 +41,13 @@ func runServer(ctx context.Context) error {
 	}
 
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				ctx, _ := context.WithTimeout(context.Background(), shutdownTimeout)
-				if err := httpServer.Shutdown(ctx); err != nil {
-					log.Fatalf("Server failed: %v", err)
-				}
-				return
-			}
+		<-ctx.Done()
+		ctx2, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if err := httpServer.Shutdown(ctx2); err != nil {
+			log.Fatalf("Server failed: %v", err)
 		}
+		return
 	}()
 
 	err := httpServer.ListenAndServe()

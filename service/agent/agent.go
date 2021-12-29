@@ -43,11 +43,11 @@ type Agent struct {
 
 func (a *Agent) Run(ctx context.Context) error {
 	if a.config.PollInterval <= 0 {
-		msg := "Invalid non-positive PollInterval=%v"
+		msg := "invalid non-positive PollInterval=%v"
 		return fmt.Errorf(msg, a.config.PollInterval)
 	}
 	if a.config.ReportInterval <= 0 {
-		msg := "Invalid non-positive ReportInterval=%v"
+		msg := "invalid non-positive ReportInterval=%v"
 		return fmt.Errorf(msg, a.config.ReportInterval)
 	}
 
@@ -58,7 +58,8 @@ func (a *Agent) Run(ctx context.Context) error {
 		case <-pollTicker.C:
 			a.pollMetrics()
 		case <-sendTicker.C:
-			ctx2, _ := context.WithTimeout(ctx, a.config.ReportInterval)
+			ctx2, cancel := context.WithTimeout(ctx, a.config.ReportInterval)
+			defer cancel()
 			a.postMetrics(ctx2)
 		case <-ctx.Done():
 			return nil

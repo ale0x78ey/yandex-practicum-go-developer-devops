@@ -28,7 +28,7 @@ func (s *Server) SaveMetric(
 
 	case model.MetricTypeCounter:
 		newValue, err := model.CounterFromString(value)
-		if err != err {
+		if err != nil {
 			return err
 		}
 
@@ -38,7 +38,7 @@ func (s *Server) SaveMetric(
 		}
 
 		oldValue, err := model.CounterFromString(oldValueString)
-		if err != err {
+		if err != nil {
 			return err
 		}
 
@@ -48,7 +48,6 @@ func (s *Server) SaveMetric(
 	default:
 		return fmt.Errorf("unknown metricType: %v", metricType)
 	}
-	return nil
 }
 
 func NewServer() *Server {

@@ -19,7 +19,7 @@ func doRequest(
 	t *testing.T,
 	server *httptest.Server,
 	method, path string,
-) *http.Response {
+) int {
 	request, err := http.NewRequest(method, server.URL+path, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -28,5 +28,6 @@ func doRequest(
 	if err != nil {
 		t.Fatal(err)
 	}
-	return response
+	defer response.Body.Close()
+	return response.StatusCode
 }
