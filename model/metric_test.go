@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGaugeString(t *testing.T) {
+func TestGauge_String(t *testing.T) {
 	tests := []struct {
 		name  string
 		value float64
@@ -38,10 +38,10 @@ func TestGaugeString(t *testing.T) {
 	}
 }
 
-func TestGaugeFromString(t *testing.T) {
+func TestGauge_GaugeFromString(t *testing.T) {
 }
 
-func TestCounterString(t *testing.T) {
+func TestCounter_String(t *testing.T) {
 	tests := []struct {
 		name  string
 		value int64
@@ -72,7 +72,7 @@ func TestCounterString(t *testing.T) {
 	}
 }
 
-func TestCounterFromString(t *testing.T) {
+func TestCounter_CounterFromString(t *testing.T) {
 }
 
 func TestMetricTypeValidate(t *testing.T) {

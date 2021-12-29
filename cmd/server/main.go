@@ -23,6 +23,10 @@ const (
 
 func runServer(ctx context.Context) error {
 	srv := server.NewServer()
+	if srv == nil {
+		return errors.New("Srv wasn't created")
+	}
+
 	api := rest.Init(srv)
 	if api == nil {
 		return errors.New("API wasn't created")

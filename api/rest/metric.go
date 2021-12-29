@@ -10,42 +10,16 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 )
 
-func metricTypeValidator(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		metricType := chi.URLParam(r, "metricType")
-		if err := model.MetricType(metricType).Validate(); err != nil {
-			http.Error(w, err.Error(), http.StatusNotImplemented)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
-func metricNameValidator(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		metricType := chi.URLParam(r, "metricName")
-		if err := model.MetricName(metricType).Validate(); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
 func (api *API) InitMetric() {
 	api.Routes.Metric.Route("/update/{metricType}/{metricName}/{metricValue}",
 		func(r chi.Router) {
-			r.Use(metricTypeValidator)
+			r.Use(withMetricTypeValidator)
 			r.Post("/", updateMetric)
 		})
 
 	api.Routes.Metric.Route("/value/{metricType}/{metricName}",
 		func(r chi.Router) {
-			r.Use(metricTypeValidator)
+			r.Use(withMetricTypeValidator)
 			r.Get("/", getMetric)
 		})
 }
