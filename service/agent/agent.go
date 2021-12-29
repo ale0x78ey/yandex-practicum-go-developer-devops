@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
@@ -79,19 +78,17 @@ func (a *Agent) post(
 	metricName model.MetricName,
 	value string,
 ) {
-	go func() {
-		request := a.client.R().SetContext(ctx).SetPathParams(map[string]string{
-			"host":        a.config.ServerHost,
-			"port":        a.config.ServerPort,
-			"metricType":  metricType.String(),
-			"metricName":  metricName.String(),
-			"metricValue": value,
-		})
-		_, err := request.Post(metricPostUrl)
-		if err != nil {
-			log.Printf("Agent.Post %s error: %v", request.URL, err)
-		}
-	}()
+	// go func() {
+	request := a.client.R().SetContext(ctx).SetPathParams(map[string]string{
+		"host":        a.config.ServerHost,
+		"port":        a.config.ServerPort,
+		"metricType":  metricType.String(),
+		"metricName":  metricName.String(),
+		"metricValue": value,
+	})
+
+	request.Post(metricPostUrl)
+	// }()
 }
 
 func (a *Agent) postMetrics(ctx context.Context) {
@@ -127,6 +124,8 @@ func (a *Agent) postMetrics(ctx context.Context) {
 	a.post(ctx, gauge, model.MetricNameSys, model.Gauge(m.Sys).String())
 	a.post(ctx, gauge, model.MetricNameRandomValue, model.Gauge(a.data.randomValue).String())
 	a.post(ctx, counter, model.MetricNamePollCount, model.Counter(a.data.pollCount).String())
+
+	// TODO: Wait posts before return?
 }
 
 func NewAgent(config Config) *Agent {

@@ -7,29 +7,14 @@ import (
 )
 
 type MetricStorer interface {
-	SaveMetricGauge(
+	// TODO: explicitly use gauge and counter types
+	// in value fields?
+	SaveMetric(
 		ctx context.Context,
-		// metricName model.MetricName,
-		metricName string,
-		value model.Gauge,
-	) error
+		metricType model.MetricType,
+		metricName, value string) error
 
-	SaveMetricCounter(
-		ctx context.Context,
-		// metricName model.MetricName,
-		metricName string,
-		value model.Counter,
-	) error
-
-	LoadMetricGauge(
-		ctx context.Context,
-		// metricName model.MetricName,
-		metricName string,
-	) (model.Gauge, error)
-
-	LoadMetricCounter(
-		ctx context.Context,
-		// metricName model.MetricName,
-		metricName string,
-	) (model.Counter, error)
+	LoadMetric(ctx context.Context,
+		metricType model.MetricType,
+		metricName string) (string, error)
 }
