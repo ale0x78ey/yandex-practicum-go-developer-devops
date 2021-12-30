@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	metricPostUrl = "http://{host}:{port}/update/{metricType}/{metricName}/{metricValue}"
+	metricPostURL = "http://{host}:{port}/update/{metricType}/{metricName}/{metricValue}"
 )
 
 type Config struct {
@@ -36,9 +37,10 @@ type metrics struct {
 }
 
 type Agent struct {
-	config Config
+	config *Config
 	client *resty.Client
 	data   metrics
+	wg     sync.WaitGroup
 }
 
 func (a *Agent) Run(ctx context.Context) error {
@@ -77,19 +79,23 @@ func (a *Agent) post(
 	ctx context.Context,
 	metricType model.MetricType,
 	metricName model.MetricName,
-	value string,
+	value fmt.Stringer,
 ) {
-	// go func() {
-	request := a.client.R().SetContext(ctx).SetPathParams(map[string]string{
-		"host":        a.config.ServerHost,
-		"port":        a.config.ServerPort,
-		"metricType":  metricType.String(),
-		"metricName":  metricName.String(),
-		"metricValue": value,
-	})
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+		request := a.client.R().
+			SetHeader("content-type", "text/plain").
+			SetPathParams(map[string]string{
+				"host":        a.config.ServerHost,
+				"port":        a.config.ServerPort,
+				"metricType":  metricType.String(),
+				"metricName":  metricName.String(),
+				"metricValue": value.String(),
+			})
 
-	request.Post(metricPostUrl)
-	// }()
+		request.Post(metricPostURL)
+	}()
 }
 
 func (a *Agent) postMetrics(ctx context.Context) {
@@ -97,39 +103,43 @@ func (a *Agent) postMetrics(ctx context.Context) {
 	counter := model.MetricTypeCounter
 	m := &a.data.memStats
 
-	a.post(ctx, gauge, model.MetricNameAlloc, model.Gauge(m.Alloc).String())
-	a.post(ctx, gauge, model.MetricNameBuckHashSys, model.Gauge(m.BuckHashSys).String())
-	a.post(ctx, gauge, model.MetricNameFrees, model.Gauge(m.Frees).String())
-	a.post(ctx, gauge, model.MetricNameGCCPUFraction, model.Gauge(m.GCCPUFraction).String())
-	a.post(ctx, gauge, model.MetricNameGCSys, model.Gauge(m.GCSys).String())
-	a.post(ctx, gauge, model.MetricNameHeapAlloc, model.Gauge(m.HeapAlloc).String())
-	a.post(ctx, gauge, model.MetricNameHeapIdle, model.Gauge(m.HeapIdle).String())
-	a.post(ctx, gauge, model.MetricNameHeapInuse, model.Gauge(m.HeapInuse).String())
-	a.post(ctx, gauge, model.MetricNameHeapObjects, model.Gauge(m.HeapObjects).String())
-	a.post(ctx, gauge, model.MetricNameHeapReleased, model.Gauge(m.HeapReleased).String())
-	a.post(ctx, gauge, model.MetricNameHeapSys, model.Gauge(m.HeapSys).String())
-	a.post(ctx, gauge, model.MetricNameLastGC, model.Gauge(m.LastGC).String())
-	a.post(ctx, gauge, model.MetricNameLookups, model.Gauge(m.Lookups).String())
-	a.post(ctx, gauge, model.MetricNameMCacheInuse, model.Gauge(m.MCacheInuse).String())
-	a.post(ctx, gauge, model.MetricNameMCacheSys, model.Gauge(m.MCacheSys).String())
-	a.post(ctx, gauge, model.MetricNameMSpanInuse, model.Gauge(m.MSpanInuse).String())
-	a.post(ctx, gauge, model.MetricNameMSpanSys, model.Gauge(m.MSpanSys).String())
-	a.post(ctx, gauge, model.MetricNameMallocs, model.Gauge(m.Mallocs).String())
-	a.post(ctx, gauge, model.MetricNameNextGC, model.Gauge(m.NextGC).String())
-	a.post(ctx, gauge, model.MetricNameNumForcedGC, model.Gauge(m.NumForcedGC).String())
-	a.post(ctx, gauge, model.MetricNameNumGC, model.Gauge(m.NumGC).String())
-	a.post(ctx, gauge, model.MetricNameOtherSys, model.Gauge(m.OtherSys).String())
-	a.post(ctx, gauge, model.MetricNamePauseTotalNs, model.Gauge(m.PauseTotalNs).String())
-	a.post(ctx, gauge, model.MetricNameStackInuse, model.Gauge(m.StackInuse).String())
-	a.post(ctx, gauge, model.MetricNameStackSys, model.Gauge(m.StackSys).String())
-	a.post(ctx, gauge, model.MetricNameSys, model.Gauge(m.Sys).String())
-	a.post(ctx, gauge, model.MetricNameRandomValue, model.Gauge(a.data.randomValue).String())
-	a.post(ctx, counter, model.MetricNamePollCount, model.Counter(a.data.pollCount).String())
+	a.post(ctx, gauge, model.MetricNameAlloc, model.Gauge(m.Alloc))
+	a.post(ctx, gauge, model.MetricNameBuckHashSys, model.Gauge(m.BuckHashSys))
+	a.post(ctx, gauge, model.MetricNameFrees, model.Gauge(m.Frees))
+	a.post(ctx, gauge, model.MetricNameGCCPUFraction, model.Gauge(m.GCCPUFraction))
+	a.post(ctx, gauge, model.MetricNameGCSys, model.Gauge(m.GCSys))
+	a.post(ctx, gauge, model.MetricNameHeapAlloc, model.Gauge(m.HeapAlloc))
+	a.post(ctx, gauge, model.MetricNameHeapIdle, model.Gauge(m.HeapIdle))
+	a.post(ctx, gauge, model.MetricNameHeapInuse, model.Gauge(m.HeapInuse))
+	a.post(ctx, gauge, model.MetricNameHeapObjects, model.Gauge(m.HeapObjects))
+	a.post(ctx, gauge, model.MetricNameHeapReleased, model.Gauge(m.HeapReleased))
+	a.post(ctx, gauge, model.MetricNameHeapSys, model.Gauge(m.HeapSys))
+	a.post(ctx, gauge, model.MetricNameLastGC, model.Gauge(m.LastGC))
+	a.post(ctx, gauge, model.MetricNameLookups, model.Gauge(m.Lookups))
+	a.post(ctx, gauge, model.MetricNameMCacheInuse, model.Gauge(m.MCacheInuse))
+	a.post(ctx, gauge, model.MetricNameMCacheSys, model.Gauge(m.MCacheSys))
+	a.post(ctx, gauge, model.MetricNameMSpanInuse, model.Gauge(m.MSpanInuse))
+	a.post(ctx, gauge, model.MetricNameMSpanSys, model.Gauge(m.MSpanSys))
+	a.post(ctx, gauge, model.MetricNameMallocs, model.Gauge(m.Mallocs))
+	a.post(ctx, gauge, model.MetricNameNextGC, model.Gauge(m.NextGC))
+	a.post(ctx, gauge, model.MetricNameNumForcedGC, model.Gauge(m.NumForcedGC))
+	a.post(ctx, gauge, model.MetricNameNumGC, model.Gauge(m.NumGC))
+	a.post(ctx, gauge, model.MetricNameOtherSys, model.Gauge(m.OtherSys))
+	a.post(ctx, gauge, model.MetricNamePauseTotalNs, model.Gauge(m.PauseTotalNs))
+	a.post(ctx, gauge, model.MetricNameStackInuse, model.Gauge(m.StackInuse))
+	a.post(ctx, gauge, model.MetricNameStackSys, model.Gauge(m.StackSys))
+	a.post(ctx, gauge, model.MetricNameSys, model.Gauge(m.Sys))
+	a.post(ctx, gauge, model.MetricNameRandomValue, model.Gauge(a.data.randomValue))
+	a.post(ctx, counter, model.MetricNamePollCount, model.Counter(a.data.pollCount))
 
-	// TODO: Wait posts before return?
+	a.wg.Wait()
 }
 
-func NewAgent(config Config) *Agent {
+func NewAgent(config *Config) *Agent {
+	if config == nil {
+		return nil
+	}
+
 	t := &http.Transport{}
 	t.MaxIdleConns = config.MaxIdleConns
 	t.MaxIdleConnsPerHost = config.MaxIdleConnsPerHost

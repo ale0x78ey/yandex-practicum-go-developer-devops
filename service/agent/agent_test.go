@@ -18,34 +18,32 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			name:           "positive PollInterval and ReportInterval",
-			pollInterval:   1,
+			pollInterval:   1 * time.Second,
 			reportInterval: 1,
 			wantErr:        false,
 		},
 		{
 			name:           "non-positive PollInterval",
 			pollInterval:   0,
-			reportInterval: 1,
+			reportInterval: 1 * time.Second,
 			wantErr:        true,
 		},
 		{
 			name:           "non-positive ReportInterval",
-			pollInterval:   1,
+			pollInterval:   1 * time.Second,
 			reportInterval: 0,
 			wantErr:        true,
 		},
 	}
 
 	for _, tt := range tests {
+		a := NewAgent(&Config{
+			PollInterval:   tt.pollInterval,
+			ReportInterval: tt.reportInterval,
+		})
 		t.Run(tt.name, func(t *testing.T) {
-			a := Agent{
-				config: Config{
-					PollInterval:   tt.pollInterval,
-					ReportInterval: tt.reportInterval,
-				},
-			}
-			ctx, cancel := context.WithCancel(context.Background())
-			cancel()
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+			defer cancel()
 			err := a.Run(ctx)
 			if !tt.wantErr {
 				require.NoError(t, err)
@@ -101,5 +99,6 @@ func TestSendMetrics(t *testing.T) {
 }
 
 func TestNewAgent(t *testing.T) {
-	assert.NotNil(t, NewAgent(Config{}))
+	assert.Nil(t, NewAgent(nil))
+	assert.NotNil(t, NewAgent(&Config{}))
 }

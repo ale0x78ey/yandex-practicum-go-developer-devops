@@ -37,7 +37,7 @@ func main() {
 	)
 	defer stop()
 
-	agent := agent.NewAgent(agent.Config{
+	agent := agent.NewAgent(&agent.Config{
 		PollInterval:        pollInterval,
 		ReportInterval:      reportInterval,
 		ServerHost:          serverHost,
