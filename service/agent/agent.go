@@ -94,6 +94,7 @@ func (a *Agent) post(
 	go func() {
 		defer a.wg.Done()
 		request := a.client.R().
+			SetContext(ctx).
 			SetHeader("content-type", "text/plain").
 			SetPathParams(map[string]string{
 				"host":        a.config.ServerHost,
