@@ -14,3 +14,9 @@ install:
 .PHONY: test
 test:
 	go test ./... -v -count 1
+
+.PHONY: setup
+setup: .install-golang-dependences
+
+.install-golang-dependences:
+	go install github.com/golang/mock/mockgen@v1.6.0

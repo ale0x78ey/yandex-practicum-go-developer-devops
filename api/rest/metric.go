@@ -37,6 +37,8 @@ func updateMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body.Close()
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -51,6 +53,8 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+
+	r.Body.Close()
 
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusOK)

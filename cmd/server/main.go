@@ -12,6 +12,7 @@ import (
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/psql"
 )
 
 const (
@@ -22,7 +23,8 @@ const (
 )
 
 func runServer(ctx context.Context) error {
-	srv := server.NewServer()
+	metricStorer := psql.NewMetricStorer()
+	srv := server.NewServer(metricStorer)
 	if srv == nil {
 		return errors.New("srv wasn't created")
 	}

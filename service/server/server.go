@@ -6,7 +6,6 @@ import (
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/psql"
 )
 
 type Server struct {
@@ -50,9 +49,12 @@ func (s *Server) SaveMetric(
 	}
 }
 
-func NewServer() *Server {
+func NewServer(metricStorer storage.MetricStorer) *Server {
+	if metricStorer == nil {
+		return nil
+	}
 	srv := &Server{
-		MetricStorer: psql.NewMetricStorer(),
+		MetricStorer: metricStorer,
 	}
 	return srv
 }
