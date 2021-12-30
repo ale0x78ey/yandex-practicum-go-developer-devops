@@ -53,13 +53,19 @@ func TestUpdateMetric(t *testing.T) {
 		func(r chi.Router) {
 			r.Use(withServer(srv))
 			r.Use(withMetricTypeValidator)
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			})
+			r.Get("/", updateMetric)
 		})
 
 	server := httptest.NewServer(r)
 	defer server.Close()
+
+	// TODO: pass params from tests.
+	metricStorer.EXPECT().SaveMetric(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Return(nil)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -109,17 +115,23 @@ func TestGetMetric(t *testing.T) {
 		func(r chi.Router) {
 			r.Use(withServer(srv))
 			r.Use(withMetricTypeValidator)
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			})
+			r.Get("/", getMetric)
 		})
 
 	server := httptest.NewServer(r)
 	defer server.Close()
 
+	// TODO: pass params from tests.
+	metricStorer.EXPECT().LoadMetric(
+		gomock.Any(),
+		gomock.Any(),
+		gomock.Any(),
+	).Return("", nil)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			statusCode := doRequest(t, server, http.MethodGet, tt.path)
+			// TODO: Check not only statusCode.
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}

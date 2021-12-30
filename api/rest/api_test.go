@@ -29,5 +29,6 @@ func doRequest(
 		t.Fatal(err)
 	}
 	defer response.Body.Close()
+	// TODO: statusCode, bodyContent
 	return response.StatusCode
 }
