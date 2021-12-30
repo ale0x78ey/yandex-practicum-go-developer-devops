@@ -6,6 +6,12 @@ import (
 )
 
 type (
+	Metric struct {
+		Type        MetricType
+		Name        MetricName
+		StringValue string
+	}
+
 	Gauge      float64
 	Counter    int64
 	MetricName string

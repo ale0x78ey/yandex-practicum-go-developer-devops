@@ -36,7 +36,7 @@ func (m *MockMetricStorer) EXPECT() *MockMetricStorerMockRecorder {
 }
 
 // LoadMetric mocks base method.
-func (m *MockMetricStorer) LoadMetric(ctx context.Context, metricType model.MetricType, metricName string) (string, error) {
+func (m *MockMetricStorer) LoadMetric(ctx context.Context, metricType model.MetricType, metricName model.MetricName) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadMetric", ctx, metricType, metricName)
 	ret0, _ := ret[0].(string)
@@ -50,16 +50,31 @@ func (mr *MockMetricStorerMockRecorder) LoadMetric(ctx, metricType, metricName i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMetric", reflect.TypeOf((*MockMetricStorer)(nil).LoadMetric), ctx, metricType, metricName)
 }
 
-// SaveMetric mocks base method.
-func (m *MockMetricStorer) SaveMetric(ctx context.Context, metricType model.MetricType, metricName, value string) error {
+// LoadMetricList mocks base method.
+func (m *MockMetricStorer) LoadMetricList(ctx context.Context) ([]*model.Metric, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveMetric", ctx, metricType, metricName, value)
+	ret := m.ctrl.Call(m, "LoadMetricList", ctx)
+	ret0, _ := ret[0].([]*model.Metric)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadMetricList indicates an expected call of LoadMetricList.
+func (mr *MockMetricStorerMockRecorder) LoadMetricList(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMetricList", reflect.TypeOf((*MockMetricStorer)(nil).LoadMetricList), ctx)
+}
+
+// SaveMetric mocks base method.
+func (m *MockMetricStorer) SaveMetric(ctx context.Context, metric *model.Metric) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMetric", ctx, metric)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveMetric indicates an expected call of SaveMetric.
-func (mr *MockMetricStorerMockRecorder) SaveMetric(ctx, metricType, metricName, value interface{}) *gomock.Call {
+func (mr *MockMetricStorerMockRecorder) SaveMetric(ctx, metric interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetric", reflect.TypeOf((*MockMetricStorer)(nil).SaveMetric), ctx, metricType, metricName, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetric", reflect.TypeOf((*MockMetricStorer)(nil).SaveMetric), ctx, metric)
 }

@@ -8,14 +8,14 @@ import (
 )
 
 type MetricStorer interface {
-	// TODO: explicitly use gauge and counter types
-	// in value fields?
-	SaveMetric(
-		ctx context.Context,
-		metricType model.MetricType,
-		metricName, value string) error
+	SaveMetric(ctx context.Context, metric *model.Metric) error
 
+	// TODO: f(ctx context.Context, metric *model.Metric) error ?
 	LoadMetric(ctx context.Context,
 		metricType model.MetricType,
-		metricName string) (string, error)
+		metricName model.MetricName,
+	) (string, error)
+
+	// TODO: Add offset, limit.
+	LoadMetricList(ctx context.Context) ([]*model.Metric, error)
 }

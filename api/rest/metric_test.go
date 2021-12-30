@@ -63,8 +63,6 @@ func TestUpdateMetric(t *testing.T) {
 	metricStorer.EXPECT().SaveMetric(
 		gomock.Any(),
 		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
 	).Return(nil)
 
 	for _, tt := range tests {
@@ -135,4 +133,7 @@ func TestGetMetric(t *testing.T) {
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
+}
+
+func TestGetMetricList(t *testing.T) {
 }
