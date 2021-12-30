@@ -32,7 +32,7 @@ func updateMetric(w http.ResponseWriter, r *http.Request) {
 	value := chi.URLParam(r, "metricValue")
 
 	if err := srv.SaveMetric(ctx, metricType, metricName, value); err != nil {
-		errCode := http.StatusInternalServerError
+		errCode := http.StatusBadRequest
 		http.Error(w, err.Error(), errCode)
 		return
 	}
