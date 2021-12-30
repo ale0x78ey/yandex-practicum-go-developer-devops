@@ -49,7 +49,6 @@ func runServer(ctx context.Context) error {
 		if err := httpServer.Shutdown(ctx2); err != nil {
 			log.Fatalf("Server failed: %v", err)
 		}
-		return
 	}()
 
 	err := httpServer.ListenAndServe()

@@ -43,6 +43,13 @@ type Agent struct {
 	wg     sync.WaitGroup
 }
 
+func minDuration(d1, d2 time.Duration) time.Duration {
+	if d1 <= d2 {
+		return d1
+	}
+	return d2
+}
+
 func (a *Agent) Run(ctx context.Context) error {
 	if a.config.PollInterval <= 0 {
 		msg := "invalid non-positive PollInterval=%v"
@@ -53,6 +60,8 @@ func (a *Agent) Run(ctx context.Context) error {
 		return fmt.Errorf(msg, a.config.ReportInterval)
 	}
 
+	postTimeout := minDuration(a.config.ReportInterval, a.config.PollInterval)
+
 	pollTicker := time.NewTicker(a.config.PollInterval)
 	sendTicker := time.NewTicker(a.config.ReportInterval)
 	for {
@@ -60,7 +69,7 @@ func (a *Agent) Run(ctx context.Context) error {
 		case <-pollTicker.C:
 			a.pollMetrics()
 		case <-sendTicker.C:
-			ctx2, cancel := context.WithTimeout(ctx, a.config.ReportInterval)
+			ctx2, cancel := context.WithTimeout(ctx, postTimeout)
 			defer cancel()
 			a.postMetrics(ctx2)
 		case <-ctx.Done():

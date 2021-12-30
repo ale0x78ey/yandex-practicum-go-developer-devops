@@ -19,9 +19,9 @@ const (
 	serverPort          = "8080"
 	maxIdleConns        = 15
 	maxIdleConnsPerHost = 15
-	retryCount          = 5
-	retryWaitTime       = 10 * time.Second
-	retryMaxWaitTime    = 60 * time.Second
+	retryCount          = 1
+	retryWaitTime       = 100 * time.Millisecond
+	retryMaxWaitTime    = 900 * time.Millisecond
 )
 
 func init() {
