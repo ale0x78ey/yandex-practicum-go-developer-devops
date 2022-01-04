@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,22 +23,19 @@ const (
 
 func runServer(ctx context.Context) error {
 	metricStorer := psql.NewMetricStorer()
-	srv := server.NewServer(metricStorer)
-	if srv == nil {
-		return errors.New("srv wasn't created")
+	srv, err := server.NewServer(metricStorer)
+	if err != nil {
+		return err
 	}
 
-	api := rest.Init(srv)
-	if api == nil {
-		return errors.New("API wasn't created")
+	h, err := rest.NewHandler(srv)
+	if err != nil {
+		return err
 	}
-
-	api.InitMiddleware()
-	api.InitMetric()
 
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", host, port),
-		Handler: api.Routes.Root,
+		Handler: h.Router,
 	}
 
 	go func() {
@@ -51,12 +47,11 @@ func runServer(ctx context.Context) error {
 		}
 	}()
 
-	err := httpServer.ListenAndServe()
-	if err == http.ErrServerClosed {
-		return nil
+	if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func main() {

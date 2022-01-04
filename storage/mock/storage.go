@@ -35,11 +35,25 @@ func (m *MockMetricStorer) EXPECT() *MockMetricStorerMockRecorder {
 	return m.recorder
 }
 
+// IncrMetric mocks base method.
+func (m *MockMetricStorer) IncrMetric(ctx context.Context, metric model.Metric) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncrMetric", ctx, metric)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncrMetric indicates an expected call of IncrMetric.
+func (mr *MockMetricStorerMockRecorder) IncrMetric(ctx, metric interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrMetric", reflect.TypeOf((*MockMetricStorer)(nil).IncrMetric), ctx, metric)
+}
+
 // LoadMetric mocks base method.
-func (m *MockMetricStorer) LoadMetric(ctx context.Context, metricType model.MetricType, metricName model.MetricName) (string, error) {
+func (m *MockMetricStorer) LoadMetric(ctx context.Context, metricType model.MetricType, metricName string) (*model.Metric, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadMetric", ctx, metricType, metricName)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*model.Metric)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -51,10 +65,10 @@ func (mr *MockMetricStorerMockRecorder) LoadMetric(ctx, metricType, metricName i
 }
 
 // LoadMetricList mocks base method.
-func (m *MockMetricStorer) LoadMetricList(ctx context.Context) ([]*model.Metric, error) {
+func (m *MockMetricStorer) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadMetricList", ctx)
-	ret0, _ := ret[0].([]*model.Metric)
+	ret0, _ := ret[0].([]model.Metric)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -66,7 +80,7 @@ func (mr *MockMetricStorerMockRecorder) LoadMetricList(ctx interface{}) *gomock.
 }
 
 // SaveMetric mocks base method.
-func (m *MockMetricStorer) SaveMetric(ctx context.Context, metric *model.Metric) error {
+func (m *MockMetricStorer) SaveMetric(ctx context.Context, metric model.Metric) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMetric", ctx, metric)
 	ret0, _ := ret[0].(error)

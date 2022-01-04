@@ -5,11 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
 )
 
@@ -42,21 +41,8 @@ func TestUpdateMetric(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	srv := server.NewServer(metricStorer)
-	if srv == nil {
-		t.Fatalf("srv wasn't created")
-	}
-
-	r := chi.NewRouter()
-
-	r.Route("/update/{metricType}/{metricName}/{metricValue}",
-		func(r chi.Router) {
-			r.Use(withServer(srv))
-			r.Use(withMetricTypeValidator)
-			r.Get("/", updateMetric)
-		})
-
-	server := httptest.NewServer(r)
+	h := newTestHandler(t, metricStorer)
+	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
 	// TODO: pass params from tests.
@@ -67,7 +53,7 @@ func TestUpdateMetric(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode := doRequest(t, server, http.MethodGet, tt.path)
+			statusCode := doRequest(t, server, http.MethodPost, tt.path)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
@@ -84,14 +70,14 @@ func TestGetMetric(t *testing.T) {
 	}{
 		{
 			name: "Valid MetricType",
-			path: "/get/gauge/testMetricName",
+			path: "/value/gauge/testMetricName",
 			want: want{
 				code: http.StatusOK,
 			},
 		},
 		{
 			name: "Invalid MetricType",
-			path: "/get/abcdef/testMetricName",
+			path: "/value/abcdef/testMetricName",
 			want: want{
 				code: http.StatusNotImplemented,
 			},
@@ -102,29 +88,17 @@ func TestGetMetric(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	srv := server.NewServer(metricStorer)
-	if srv == nil {
-		t.Fatalf("srv wasn't created")
-	}
-
-	r := chi.NewRouter()
-
-	r.Route("/get/{metricType}/{metricName}",
-		func(r chi.Router) {
-			r.Use(withServer(srv))
-			r.Use(withMetricTypeValidator)
-			r.Get("/", getMetric)
-		})
-
-	server := httptest.NewServer(r)
+	h := newTestHandler(t, metricStorer)
+	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
 	// TODO: pass params from tests.
+	metric := model.Metric{}
 	metricStorer.EXPECT().LoadMetric(
 		gomock.Any(),
 		gomock.Any(),
 		gomock.Any(),
-	).Return("", nil)
+	).Return(&metric, nil)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

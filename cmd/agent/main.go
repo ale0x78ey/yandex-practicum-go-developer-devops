@@ -37,7 +37,7 @@ func main() {
 	)
 	defer stop()
 
-	agent := agent.NewAgent(&agent.Config{
+	agent, err := agent.NewAgent(agent.Config{
 		PollInterval:        pollInterval,
 		ReportInterval:      reportInterval,
 		ServerHost:          serverHost,
@@ -48,8 +48,8 @@ func main() {
 		RetryWaitTime:       retryWaitTime,
 		RetryMaxWaitTime:    retryMaxWaitTime,
 	})
-	if agent == nil {
-		log.Fatalf("Failed to create an agent")
+	if err != nil {
+		log.Fatalf("Failed to create an agent: %v", err)
 	}
 
 	if err := agent.Run(ctx); err != nil {

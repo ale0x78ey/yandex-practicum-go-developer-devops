@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewAgent(t *testing.T) {
+	agent, err := NewAgent(Config{})
+	assert.Nil(t, err)
+	assert.NotNil(t, agent)
+}
+
 func TestRun(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -37,14 +43,15 @@ func TestRun(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		a := NewAgent(&Config{
-			PollInterval:   tt.pollInterval,
-			ReportInterval: tt.reportInterval,
-		})
 		t.Run(tt.name, func(t *testing.T) {
+			a, err := NewAgent(Config{
+				PollInterval:   tt.pollInterval,
+				ReportInterval: tt.reportInterval,
+			})
+			require.Nil(t, err)
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 			defer cancel()
-			err := a.Run(ctx)
+			err = a.Run(ctx)
 			if !tt.wantErr {
 				require.NoError(t, err)
 				return
@@ -89,16 +96,8 @@ func TestPollMetrics_PollCount(t *testing.T) {
 	}
 }
 
+func TestPostMetrics(t *testing.T) {
+}
+
 func TestPost(t *testing.T) {
-}
-
-func TestSend(t *testing.T) {
-}
-
-func TestSendMetrics(t *testing.T) {
-}
-
-func TestNewAgent(t *testing.T) {
-	assert.Nil(t, NewAgent(nil))
-	assert.NotNil(t, NewAgent(&Config{}))
 }

@@ -1,39 +1,56 @@
 package rest
 
 import (
+	"errors"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 )
 
-type Routes struct {
-	Root   *chi.Mux
-	Metric *chi.Mux
+type Handler struct {
+	Server *server.Server
+	Router *chi.Mux
 }
 
-type API struct {
-	srv    *server.Server
-	Routes *Routes
-}
-
-func Init(srv *server.Server) *API {
+func NewHandler(srv *server.Server) (*Handler, error) {
 	if srv == nil {
-		return nil
+		return nil, errors.New("invalid srv value: nil")
 	}
 
-	api := &API{
-		srv:    srv,
-		Routes: &Routes{},
+	router := chi.NewRouter()
+	if router == nil {
+		return nil, errors.New("router wasn't created")
 	}
 
-	api.Routes.Metric = chi.NewRouter()
-	if api.Routes.Metric == nil {
-		return nil
+	h := &Handler{
+		Server: srv,
+		Router: router,
 	}
 
-	// It's better to mount the API with own prefixes
-	// but these are the requirements of the task.
-	api.Routes.Root = api.Routes.Metric
+	h.initMiddleware()
+	h.initMetric()
 
-	return api
+	return h, nil
+}
+
+func (h *Handler) initMiddleware() {
+	h.Router.Use(middleware.Recoverer)
+}
+
+func (h *Handler) initMetric() {
+	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}",
+		func(r chi.Router) {
+			r.Use(withMetricTypeValidator)
+			r.Post("/", h.updateMetric)
+		})
+
+	h.Router.Route("/value/{metricType}/{metricName}",
+		func(r chi.Router) {
+			r.Use(withMetricTypeValidator)
+			r.Get("/", h.getMetric)
+		})
+
+	h.Router.Get("/", h.getMetricList)
 }

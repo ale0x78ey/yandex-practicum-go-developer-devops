@@ -8,14 +8,15 @@ import (
 )
 
 type MetricStorer interface {
-	SaveMetric(ctx context.Context, metric *model.Metric) error
+	SaveMetric(ctx context.Context, metric model.Metric) error
+	IncrMetric(ctx context.Context, metric model.Metric) error
 
-	// TODO: f(ctx context.Context, metric *model.Metric) error ?
-	LoadMetric(ctx context.Context,
+	LoadMetric(
+		ctx context.Context,
 		metricType model.MetricType,
-		metricName model.MetricName,
-	) (string, error)
+		metricName string,
+	) (*model.Metric, error)
 
 	// TODO: Add offset, limit.
-	LoadMetricList(ctx context.Context) ([]*model.Metric, error)
+	LoadMetricList(ctx context.Context) ([]model.Metric, error)
 }

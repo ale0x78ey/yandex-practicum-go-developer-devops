@@ -9,49 +9,66 @@ import (
 )
 
 type MetricStorer struct {
-	rw sync.RWMutex
-	// TODO: store metricType in Postgres.
-	// It's not beautiful to use map[string]map[string]string or smth else.
-	metrics map[string]string
+	sync.RWMutex
+
+	metrics map[string]model.Metric
 }
 
 func NewMetricStorer() *MetricStorer {
 	return &MetricStorer{
-		metrics: make(map[string]string),
+		metrics: make(map[string]model.Metric),
 	}
 }
 
-func (s *MetricStorer) SaveMetric(ctx context.Context, metric *model.Metric) error {
-	s.rw.Lock()
-	defer s.rw.Unlock()
+func (s *MetricStorer) SaveMetric(ctx context.Context, metric model.Metric) error {
+	s.Lock()
+	defer s.Unlock()
 
-	s.metrics[metric.Name.String()] = metric.StringValue
+	s.metrics[metric.Name] = metric
+	return nil
+}
+
+func (s *MetricStorer) IncrMetric(ctx context.Context, metric model.Metric) error {
+	s.Lock()
+	defer s.Unlock()
+
+	if oldMetric, ok := s.metrics[metric.Name]; ok {
+		if oldMetric.Type != metric.Type {
+			return fmt.Errorf("different metric types for metric %s", metric.Name)
+		}
+		metric.GaugeValue += oldMetric.GaugeValue
+		metric.CounterValue += oldMetric.CounterValue
+		s.metrics[metric.Name] = oldMetric
+
+	}
+
+	s.metrics[metric.Name] = metric
+
 	return nil
 }
 
 func (s *MetricStorer) LoadMetric(
 	ctx context.Context,
 	metricType model.MetricType,
-	metricName model.MetricName,
-) (string, error) {
-	s.rw.RLock()
-	defer s.rw.RUnlock()
+	metricName string,
+) (*model.Metric, error) {
+	s.RLock()
+	defer s.RUnlock()
 
-	if value, ok := s.metrics[metricName.String()]; ok {
-		return value, nil
+	if metric, ok := s.metrics[metricName]; ok && metric.Type == metricType {
+		return &metric, nil
 	}
 
-	return "", fmt.Errorf("%v not found", metricName)
+	return nil, nil
 }
 
-func (s *MetricStorer) LoadMetricList(ctx context.Context) ([]*model.Metric, error) {
-	s.rw.RLock()
-	defer s.rw.RUnlock()
+func (s *MetricStorer) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
+	s.RLock()
+	defer s.RUnlock()
 
-	metrics := make([]*model.Metric, 0, len(s.metrics))
-	for name, value := range s.metrics {
-		m := &model.Metric{Name: model.MetricName(name), StringValue: value}
-		metrics = append(metrics, m)
+	metrics := make([]model.Metric, 0, len(s.metrics))
+	for _, metric := range s.metrics {
+		metrics = append(metrics, metric)
 	}
 
 	return metrics, nil

@@ -109,38 +109,3 @@ func TestMetricTypeValidate(t *testing.T) {
 		})
 	}
 }
-
-func TestMetricNameValidate(t *testing.T) {
-	tests := []struct {
-		name    string
-		value   MetricName
-		wantErr bool
-	}{
-		{
-			name:    "Valid MetricName",
-			value:   MetricNameAlloc,
-			wantErr: false,
-		},
-		{
-			name:    "Empty MetricName",
-			value:   MetricName(""),
-			wantErr: true,
-		},
-		{
-			name:    "Invalid MetricName",
-			value:   MetricName("abrakadabra"),
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.value.Validate()
-			if !tt.wantErr {
-				require.NoError(t, err)
-				return
-			}
-			assert.Error(t, err)
-		})
-	}
-}

@@ -8,68 +8,48 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 )
 
-func (api *API) InitMetric() {
-	api.Routes.Metric.Route("/update/{metricType}/{metricName}/{metricValue}",
-		func(r chi.Router) {
-			r.Use(withMetricTypeValidator)
-			r.Post("/", updateMetric)
-		})
-
-	api.Routes.Metric.Route("/value/{metricType}/{metricName}",
-		func(r chi.Router) {
-			r.Use(withMetricTypeValidator)
-			r.Get("/", getMetric)
-		})
-
-	api.Routes.Metric.Get("/", getMetricList)
-}
-
-func updateMetric(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	srv := ctx.Value(ContextServerKey).(*server.Server)
+func (h *Handler) updateMetric(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
-	metricName := model.MetricName(chi.URLParam(r, "metricName"))
+	metricName := chi.URLParam(r, "metricName")
+	metricStringValue := chi.URLParam(r, "metricValue")
 
-	metric := &model.Metric{
-		Type:        metricType,
-		Name:        metricName,
-		StringValue: chi.URLParam(r, "metricValue"),
-	}
-
-	if err := srv.SaveMetric(ctx, metric); err != nil {
+	metric, err := model.MetricFromString(metricName, metricType, metricStringValue)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Do I need close handles in this cases?
-	r.Body.Close()
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func getMetric(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	srv := ctx.Value(ContextServerKey).(*server.Server)
-	metricType := model.MetricType(chi.URLParam(r, "metricType"))
-	metricName := model.MetricName(chi.URLParam(r, "metricName"))
-
-	value, err := srv.LoadMetric(ctx, metricType, metricName)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	r.Body.Close()
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
+	metricType := model.MetricType(chi.URLParam(r, "metricType"))
+	metricName := chi.URLParam(r, "metricName")
+
+	metric, err := h.Server.LoadMetric(r.Context(), metricType, metricName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if metric == nil {
+		http.Error(w, fmt.Sprintf("Metric %s not found", metricName), http.StatusNotFound)
+		return
+	}
 
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, value)
+	fmt.Fprint(w, metric.StringValue())
 }
 
-func getMetricList(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {
 	htmlTemplate := `
 	<!DOCTYPE html>
 	<html>
@@ -89,10 +69,7 @@ func getMetricList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
-	srv := ctx.Value(ContextServerKey).(*server.Server)
-
-	metrics, err := srv.LoadMetricList(ctx)
+	metrics, err := h.Server.LoadMetricList(r.Context())
 	if err != nil {
 		errCode := http.StatusInternalServerError
 		http.Error(w, err.Error(), errCode)
@@ -101,13 +78,11 @@ func getMetricList(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Title   string
-		Metrics []*model.Metric
+		Metrics []model.Metric
 	}{
 		Title:   "Metric List",
 		Metrics: metrics,
 	}
-
-	r.Body.Close()
 
 	w.Header().Set("content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
