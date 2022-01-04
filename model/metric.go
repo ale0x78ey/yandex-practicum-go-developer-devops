@@ -62,7 +62,7 @@ func (m *Metric) StringValue() string {
 	case MetricTypeCounter:
 		return m.CounterValue.String()
 	default:
-		return fmt.Sprintf("<unkown>")
+		return ""
 	}
 }
 

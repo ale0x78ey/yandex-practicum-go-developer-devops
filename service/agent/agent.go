@@ -46,8 +46,8 @@ type Agent struct {
 }
 
 func NewAgent(config Config) (*Agent, error) {
-	if config.PollInterval == 0 {
-		config.PollInterval = minDuration(config.ReportInterval, config.PollInterval)
+	if config.PostTimeout <= 0 {
+		config.PostTimeout = minDuration(config.ReportInterval, config.PollInterval)
 	}
 
 	t := &http.Transport{}
