@@ -38,8 +38,6 @@ func (s *MetricStorer) IncrMetric(ctx context.Context, metric model.Metric) erro
 		}
 		metric.GaugeValue += oldMetric.GaugeValue
 		metric.CounterValue += oldMetric.CounterValue
-		s.metrics[metric.Name] = oldMetric
-
 	}
 
 	s.metrics[metric.Name] = metric

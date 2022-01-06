@@ -22,8 +22,15 @@ func TestUpdateMetric(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Valid MetricType and value",
-			path: "/update/gauge/testMetricName/123",
+			name: "Valid gauge metric1",
+			path: "/update/gauge/metric1/123.45",
+			want: want{
+				code: http.StatusOK,
+			},
+		},
+		{
+			name: "Valid counter metric2",
+			path: "/update/counter/metric2/123",
 			want: want{
 				code: http.StatusOK,
 			},
@@ -45,15 +52,17 @@ func TestUpdateMetric(t *testing.T) {
 	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
-	// TODO: pass params from tests.
-	metricStorer.EXPECT().SaveMetric(
-		gomock.Any(),
-		gomock.Any(),
-	).Return(nil)
+	metric1 := model.MetricFromGauge("metric1", model.Gauge(123.45))
+	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
+
+	gomock.InOrder(
+		metricStorer.EXPECT().SaveMetric(gomock.Any(), metric1).Return(nil),
+		metricStorer.EXPECT().IncrMetric(gomock.Any(), metric2).Return(nil),
+	)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode := doRequest(t, server, http.MethodPost, tt.path)
+			statusCode, _ := doRequest(t, server, http.MethodPost, tt.path)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
@@ -62,6 +71,7 @@ func TestUpdateMetric(t *testing.T) {
 func TestGetMetric(t *testing.T) {
 	type want struct {
 		code int
+		body string
 	}
 	tests := []struct {
 		name string
@@ -69,17 +79,27 @@ func TestGetMetric(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Valid MetricType",
-			path: "/value/gauge/testMetricName",
+			name: "Valid gauge metric1",
+			path: "/value/gauge/metric1",
 			want: want{
 				code: http.StatusOK,
+				body: "123.45",
+			},
+		},
+		{
+			name: "Valid counter metric2",
+			path: "/value/counter/metric2",
+			want: want{
+				code: http.StatusOK,
+				body: "123",
 			},
 		},
 		{
 			name: "Invalid MetricType",
-			path: "/value/abcdef/testMetricName",
+			path: "/value/abrakadabra/metric2",
 			want: want{
 				code: http.StatusNotImplemented,
+				body: "unkown MetricType: abrakadabra\n",
 			},
 		},
 	}
@@ -92,19 +112,28 @@ func TestGetMetric(t *testing.T) {
 	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
-	// TODO: pass params from tests.
-	metric := model.Metric{}
-	metricStorer.EXPECT().LoadMetric(
-		gomock.Any(),
-		gomock.Any(),
-		gomock.Any(),
-	).Return(&metric, nil)
+	metric1 := model.MetricFromGauge("metric1", model.Gauge(123.45))
+	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
+
+	gomock.InOrder(
+		metricStorer.EXPECT().LoadMetric(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Any(),
+		).Return(&metric1, nil),
+
+		metricStorer.EXPECT().LoadMetric(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Any(),
+		).Return(&metric2, nil),
+	)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode := doRequest(t, server, http.MethodGet, tt.path)
-			// TODO: Check not only statusCode.
+			statusCode, body := doRequest(t, server, http.MethodGet, tt.path)
 			assert.Equal(t, tt.want.code, statusCode)
+			assert.Equal(t, tt.want.body, body)
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
 
@@ -38,7 +39,7 @@ func doRequest(
 	t *testing.T,
 	server *httptest.Server,
 	method, path string,
-) int {
+) (int, string) {
 	request, err := http.NewRequest(method, server.URL+path, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +48,11 @@ func doRequest(
 	if err != nil {
 		t.Fatal(err)
 	}
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer response.Body.Close()
-	// TODO: statusCode, bodyContent
-	return response.StatusCode
+
+	return response.StatusCode, string(responseBody)
 }

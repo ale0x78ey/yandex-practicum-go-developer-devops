@@ -19,8 +19,15 @@ func TestWithMetricTypeValidator(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Valid MetricType",
+			name: "Valid Gauge MetricType",
 			path: "/smth/gauge",
+			want: want{
+				code: http.StatusOK,
+			},
+		},
+		{
+			name: "Valid Counter MetricType",
+			path: "/smth/counter",
 			want: want{
 				code: http.StatusOK,
 			},
@@ -48,7 +55,7 @@ func TestWithMetricTypeValidator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode := doRequest(t, server, http.MethodGet, tt.path)
+			statusCode, _ := doRequest(t, server, http.MethodGet, tt.path)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
