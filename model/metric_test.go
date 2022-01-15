@@ -50,7 +50,7 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 			assert.Equal(t, tt.want.ID, metric.ID)
 			assert.Equal(t, tt.want.MType, metric.MType)
 			assert.Equal(t, tt.want.Value, *metric.Value)
-			assert.Equal(t, tt.want.StringValue, metric.StringValue())
+			assert.Equal(t, tt.want.StringValue, metric.String())
 		})
 	}
 }
@@ -98,7 +98,7 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 			assert.Equal(t, tt.want.ID, metric.ID)
 			assert.Equal(t, tt.want.MType, metric.MType)
 			assert.Equal(t, tt.want.Delta, *metric.Delta)
-			assert.Equal(t, tt.want.StringValue, metric.StringValue())
+			assert.Equal(t, tt.want.StringValue, metric.String())
 		})
 	}
 }
@@ -180,7 +180,7 @@ func TestMetric_MetricFromString(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tt.want.ID, metric.ID)
 				assert.Equal(t, tt.want.MType, metric.MType)
-				assert.Equal(t, tt.want.StringValue, metric.StringValue())
+				assert.Equal(t, tt.want.StringValue, metric.String())
 
 				switch tt.metricType {
 				case MetricTypeGauge:

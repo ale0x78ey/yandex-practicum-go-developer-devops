@@ -55,7 +55,7 @@ func MetricFromString(metricName string, metricType MetricType, value string) (M
 	}
 }
 
-func (m *Metric) StringValue() string {
+func (m Metric) String() string {
 	switch m.MType {
 	case MetricTypeGauge:
 		return m.Value.String()

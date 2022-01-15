@@ -67,7 +67,7 @@ func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, metric.StringValue())
+	fmt.Fprint(w, metric.String())
 }
 
 func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {

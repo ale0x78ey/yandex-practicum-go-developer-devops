@@ -47,7 +47,6 @@ func TestUpdateMetricWithURL(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
 	h := newTestHandler(t, metricStorer)
@@ -107,7 +106,6 @@ func TestUpdateMetricWithBody(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
 	h := newTestHandler(t, metricStorer)
@@ -169,7 +167,6 @@ func TestGetMetricWithURL(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
 	h := newTestHandler(t, metricStorer)
@@ -243,7 +240,6 @@ func TestGetMetricWithBody(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
 	h := newTestHandler(t, metricStorer)

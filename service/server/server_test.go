@@ -49,7 +49,6 @@ func TestServer_PushMetric(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
 	srv, err := NewServer(metricStorer)
