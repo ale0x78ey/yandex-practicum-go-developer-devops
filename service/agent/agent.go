@@ -118,6 +118,7 @@ func (a *Agent) postMetrics(ctx context.Context) {
 	m := &a.data.memStats
 
 	a.post(ctx, model.MetricFromGauge("Alloc", model.Gauge(m.Alloc)))
+	a.post(ctx, model.MetricFromGauge("TotalAlloc", model.Gauge(m.TotalAlloc)))
 	a.post(ctx, model.MetricFromGauge("BuckHashSys", model.Gauge(m.BuckHashSys)))
 	a.post(ctx, model.MetricFromGauge("Frees", model.Gauge(m.Frees)))
 	a.post(ctx, model.MetricFromGauge("GCCPUFraction", model.Gauge(m.GCCPUFraction)))
