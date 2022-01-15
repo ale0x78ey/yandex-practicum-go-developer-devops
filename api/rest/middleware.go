@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func withMetricTypeValidator(next http.Handler) http.Handler {
+func withMTypeValidator(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		metricType := chi.URLParam(r, "metricType")
 		if err := model.MetricType(metricType).Validate(); err != nil {

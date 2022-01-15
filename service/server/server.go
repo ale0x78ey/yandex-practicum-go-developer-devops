@@ -26,12 +26,12 @@ func NewServer(metricStorer storage.MetricStorer) (*Server, error) {
 }
 
 func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
-	switch metric.Type {
+	switch metric.MType {
 	case model.MetricTypeGauge:
 		return s.MetricStorer.SaveMetric(ctx, metric)
 	case model.MetricTypeCounter:
 		return s.MetricStorer.IncrMetric(ctx, metric)
 	default:
-		return fmt.Errorf("unknown metricType: %v", metric.Type)
+		return fmt.Errorf("unknown metricType: %v", metric.MType)
 	}
 }

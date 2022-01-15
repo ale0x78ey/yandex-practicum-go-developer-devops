@@ -42,15 +42,19 @@ func (h *Handler) initMiddleware() {
 func (h *Handler) initMetric() {
 	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}",
 		func(r chi.Router) {
-			r.Use(withMetricTypeValidator)
+			r.Use(withMTypeValidator)
 			r.Post("/", h.updateMetric)
 		})
 
+	h.Router.Post("/update", h.updateMetric)
+
 	h.Router.Route("/value/{metricType}/{metricName}",
 		func(r chi.Router) {
-			r.Use(withMetricTypeValidator)
+			r.Use(withMTypeValidator)
 			r.Get("/", h.getMetric)
 		})
+
+	h.Router.Post("/value", h.getMetric)
 
 	h.Router.Get("/", h.getMetricList)
 }

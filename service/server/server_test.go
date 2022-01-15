@@ -41,8 +41,8 @@ func TestServer_PushMetric(t *testing.T) {
 		{
 			name: "invalid metricType for metric3",
 			metric: model.Metric{
-				Name: "metric3",
-				Type: model.MetricType("abrakadabra"),
+				ID: "metric3",
+				MType: model.MetricType("abrakadabra"),
 			},
 			wantErr: true,
 		},

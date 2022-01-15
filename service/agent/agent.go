@@ -158,8 +158,8 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 			SetPathParams(map[string]string{
 				"host":        a.config.ServerHost,
 				"port":        a.config.ServerPort,
-				"metricName":  metric.Name,
-				"metricType":  metric.Type.String(),
+				"metricName":  metric.ID,
+				"metricType":  metric.MType.String(),
 				"metricValue": metric.StringValue(),
 			})
 

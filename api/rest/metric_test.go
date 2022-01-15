@@ -36,7 +36,7 @@ func TestUpdateMetric(t *testing.T) {
 			},
 		},
 		{
-			name: "Invalid MetricType",
+			name: "Invalid MType",
 			path: "/update/abcdef/testMetricName/123",
 			want: want{
 				code: http.StatusNotImplemented,
@@ -95,11 +95,11 @@ func TestGetMetric(t *testing.T) {
 			},
 		},
 		{
-			name: "Invalid MetricType",
+			name: "Invalid MType",
 			path: "/value/abrakadabra/metric2",
 			want: want{
 				code: http.StatusNotImplemented,
-				body: "unkown MetricType: abrakadabra\n",
+				body: "unkown MType: abrakadabra\n",
 			},
 		},
 	}

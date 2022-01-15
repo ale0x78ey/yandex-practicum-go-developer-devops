@@ -9,9 +9,9 @@ import (
 
 func TestMetric_MetricFromGauge(t *testing.T) {
 	type want struct {
-		Name        string
-		Type        MetricType
-		GaugeValue  Gauge
+		ID string
+		MType        MetricType
+		Value  Gauge
 		StringValue string
 	}
 	tests := []struct {
@@ -25,9 +25,9 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 			metricName:  "metric1",
 			metricValue: Gauge(1.05),
 			want: want{
-				Name:        "metric1",
-				Type:        MetricTypeGauge,
-				GaugeValue:  Gauge(1.05),
+				ID:        "metric1",
+				MType:        MetricTypeGauge,
+				Value:  Gauge(1.05),
 				StringValue: "1.05",
 			},
 		},
@@ -36,9 +36,9 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 			metricName:  "metric2",
 			metricValue: Gauge(2),
 			want: want{
-				Name:        "metric2",
-				Type:        MetricTypeGauge,
-				GaugeValue:  Gauge(2),
+				ID:        "metric2",
+				MType:        MetricTypeGauge,
+				Value:  Gauge(2),
 				StringValue: "2",
 			},
 		},
@@ -47,9 +47,9 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			metric := MetricFromGauge(tt.metricName, tt.metricValue)
-			assert.Equal(t, tt.want.Name, metric.Name)
-			assert.Equal(t, tt.want.Type, metric.Type)
-			assert.Equal(t, tt.want.GaugeValue, metric.GaugeValue)
+			assert.Equal(t, tt.want.ID, metric.ID)
+			assert.Equal(t, tt.want.MType, metric.MType)
+			assert.Equal(t, tt.want.Value, *metric.Value)
 			assert.Equal(t, tt.want.StringValue, metric.StringValue())
 		})
 	}
@@ -57,9 +57,9 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 
 func TestMetric_MetricFromCounter(t *testing.T) {
 	type want struct {
-		Name         string
-		Type         MetricType
-		CounterValue Counter
+		ID string
+		MType         MetricType
+		Delta Counter
 		StringValue  string
 	}
 	tests := []struct {
@@ -73,9 +73,9 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 			metricName:  "metric1",
 			metricValue: Counter(1),
 			want: want{
-				Name:         "metric1",
-				Type:         MetricTypeCounter,
-				CounterValue: Counter(1),
+				ID:         "metric1",
+				MType:         MetricTypeCounter,
+				Delta: Counter(1),
 				StringValue:  "1",
 			},
 		},
@@ -84,9 +84,9 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 			metricName:  "metric2",
 			metricValue: Counter(2),
 			want: want{
-				Name:         "metric2",
-				Type:         MetricTypeCounter,
-				CounterValue: Counter(2),
+				ID:         "metric2",
+				MType:         MetricTypeCounter,
+				Delta: Counter(2),
 				StringValue:  "2",
 			},
 		},
@@ -95,9 +95,9 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			metric := MetricFromCounter(tt.metricName, tt.metricValue)
-			assert.Equal(t, tt.want.Name, metric.Name)
-			assert.Equal(t, tt.want.Type, metric.Type)
-			assert.Equal(t, tt.want.CounterValue, metric.CounterValue)
+			assert.Equal(t, tt.want.ID, metric.ID)
+			assert.Equal(t, tt.want.MType, metric.MType)
+			assert.Equal(t, tt.want.Delta, *metric.Delta)
 			assert.Equal(t, tt.want.StringValue, metric.StringValue())
 		})
 	}
@@ -105,10 +105,10 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 
 func TestMetric_MetricFromString(t *testing.T) {
 	type want struct {
-		Name         string
-		Type         MetricType
-		GaugeValue   Gauge
-		CounterValue Counter
+		ID string
+		MType         MetricType
+		Value   Gauge
+		Delta Counter
 		StringValue  string
 	}
 	tests := []struct {
@@ -125,9 +125,9 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeGauge,
 			metricStringValue: "0",
 			want: want{
-				Name:        "metric1",
-				Type:        MetricTypeGauge,
-				GaugeValue:  Gauge(0),
+				ID:        "metric1",
+				MType:        MetricTypeGauge,
+				Value:  Gauge(0),
 				StringValue: "0",
 			},
 			wantErr: false,
@@ -138,9 +138,9 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeGauge,
 			metricStringValue: "1.0095",
 			want: want{
-				Name:        "metric2",
-				Type:        MetricTypeGauge,
-				GaugeValue:  Gauge(1.0095),
+				ID:        "metric2",
+				MType:        MetricTypeGauge,
+				Value:  Gauge(1.0095),
 				StringValue: "1.0095",
 			},
 			wantErr: false,
@@ -151,9 +151,9 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeCounter,
 			metricStringValue: "0",
 			want: want{
-				Name:         "metric3",
-				Type:         MetricTypeCounter,
-				CounterValue: Counter(0),
+				ID:         "metric3",
+				MType:         MetricTypeCounter,
+				Delta: Counter(0),
 				StringValue:  "0",
 			},
 			wantErr: false,
@@ -164,9 +164,9 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeCounter,
 			metricStringValue: "99999999",
 			want: want{
-				Name:         "metric4",
-				Type:         MetricTypeCounter,
-				CounterValue: Counter(99999999),
+				ID:         "metric4",
+				MType:         MetricTypeCounter,
+				Delta: Counter(99999999),
 				StringValue:  "99999999",
 			},
 			wantErr: false,
@@ -178,15 +178,15 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metric, err := MetricFromString(tt.metricName, tt.metricType, tt.metricStringValue)
 			if !tt.wantErr {
 				require.NoError(t, err)
-				assert.Equal(t, tt.want.Name, metric.Name)
-				assert.Equal(t, tt.want.Type, metric.Type)
+				assert.Equal(t, tt.want.ID, metric.ID)
+				assert.Equal(t, tt.want.MType, metric.MType)
 				assert.Equal(t, tt.want.StringValue, metric.StringValue())
 
 				switch tt.metricType {
 				case MetricTypeGauge:
-					assert.Equal(t, tt.want.GaugeValue, metric.GaugeValue)
+					assert.Equal(t, tt.want.Value, *metric.Value)
 				case MetricTypeCounter:
-					assert.Equal(t, tt.want.CounterValue, metric.CounterValue)
+					assert.Equal(t, tt.want.Delta, *metric.Delta)
 				}
 				return
 			}

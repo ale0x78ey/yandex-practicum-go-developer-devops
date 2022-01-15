@@ -24,7 +24,7 @@ func (s *MetricStorer) SaveMetric(ctx context.Context, metric model.Metric) erro
 	s.Lock()
 	defer s.Unlock()
 
-	s.metrics[metric.Name] = metric
+	s.metrics[metric.ID] = metric
 	return nil
 }
 
@@ -32,15 +32,19 @@ func (s *MetricStorer) IncrMetric(ctx context.Context, metric model.Metric) erro
 	s.Lock()
 	defer s.Unlock()
 
-	if oldMetric, ok := s.metrics[metric.Name]; ok {
-		if oldMetric.Type != metric.Type {
-			return fmt.Errorf("different metric types for metric %s", metric.Name)
+	if oldMetric, ok := s.metrics[metric.ID]; ok {
+		if oldMetric.MType != metric.MType {
+			return fmt.Errorf("different metric types for metric %s", metric.ID)
 		}
-		metric.GaugeValue += oldMetric.GaugeValue
-		metric.CounterValue += oldMetric.CounterValue
+		if metric.Value != nil {
+			*metric.Value += *oldMetric.Value
+		}
+		if metric.Delta != nil {
+			*metric.Delta += *oldMetric.Delta
+		}
 	}
 
-	s.metrics[metric.Name] = metric
+	s.metrics[metric.ID] = metric
 
 	return nil
 }
@@ -53,7 +57,7 @@ func (s *MetricStorer) LoadMetric(
 	s.RLock()
 	defer s.RUnlock()
 
-	if metric, ok := s.metrics[metricName]; ok && metric.Type == metricType {
+	if metric, ok := s.metrics[metricName]; ok && metric.MType == metricType {
 		return &metric, nil
 	}
 
