@@ -113,7 +113,7 @@ func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {
 		<title>{{.Title}}</title>
 	</head>
 	<body>
-		{{range .Metrics}}<div>{{ .Name }}: {{ .StringValue }}</div>{{end}}
+		{{range .Metrics}}<div>{{ .ID }}: {{ .String }}</div>{{end}}
 	</body>
 	</html>`
 
