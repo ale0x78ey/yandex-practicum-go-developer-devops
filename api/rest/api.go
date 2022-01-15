@@ -43,18 +43,18 @@ func (h *Handler) initMetric() {
 	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}",
 		func(r chi.Router) {
 			r.Use(withMTypeValidator)
-			r.Post("/", h.updateMetricFromURL)
+			r.Post("/", h.updateMetricWithURL)
 		})
 
-	h.Router.Post("/update", h.updateMetricFromBody)
+	h.Router.Post("/update", h.updateMetricWithBody)
 
 	h.Router.Route("/value/{metricType}/{metricName}",
 		func(r chi.Router) {
 			r.Use(withMTypeValidator)
-			r.Get("/", h.getMetric)
+			r.Get("/", h.getMetricWithURL)
 		})
 
-	h.Router.Post("/value", h.getMetric)
+	h.Router.Post("/value", h.getMetricWithBody)
 
 	h.Router.Get("/", h.getMetricList)
 }

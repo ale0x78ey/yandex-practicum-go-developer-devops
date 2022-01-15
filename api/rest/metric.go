@@ -11,7 +11,7 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
-func (h *Handler) updateMetricFromURL(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
 	metricName := chi.URLParam(r, "metricName")
 	metricStringValue := chi.URLParam(r, "metricValue")
@@ -30,7 +30,7 @@ func (h *Handler) updateMetricFromURL(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) updateMetricFromBody(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 	var metric model.Metric
 	if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func (h *Handler) updateMetricFromBody(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
 	metricName := chi.URLParam(r, "metricName")
 
@@ -68,6 +68,40 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, metric.StringValue())
+}
+
+func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {
+	var metricRequest model.Metric
+	if err := json.NewDecoder(r.Body).Decode(&metricRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := metricRequest.MType.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusNotImplemented)
+		return
+	}
+
+	metric, err := h.Server.LoadMetric(r.Context(), metricRequest.MType, metricRequest.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if metric == nil {
+		http.Error(w, fmt.Sprintf("Metric %s not found", metricRequest.ID), http.StatusNotFound)
+		return
+	}
+
+	data, err := json.Marshal(metric)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, string(data))
 }
 
 func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {

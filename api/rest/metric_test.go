@@ -14,7 +14,7 @@ import (
 	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
 )
 
-func TestUpdateMetricFromURL(t *testing.T) {
+func TestUpdateMetricWithURL(t *testing.T) {
 	type want struct {
 		code int
 	}
@@ -70,7 +70,7 @@ func TestUpdateMetricFromURL(t *testing.T) {
 	}
 }
 
-func TestUpdateMetricFromBody(t *testing.T) {
+func TestUpdateMetricWithBody(t *testing.T) {
 	type want struct {
 		code int
 	}
@@ -132,7 +132,7 @@ func TestUpdateMetricFromBody(t *testing.T) {
 	}
 }
 
-func TestGetMetric(t *testing.T) {
+func TestGetMetricWithURL(t *testing.T) {
 	type want struct {
 		code int
 		body string
@@ -160,7 +160,7 @@ func TestGetMetric(t *testing.T) {
 		},
 		{
 			name: "Invalid MType",
-			path: "/value/abrakadabra/metric2",
+			path: "/value/abrakadabra/metric3",
 			want: want{
 				code: http.StatusNotImplemented,
 				body: "unkown MType: abrakadabra\n",
@@ -196,6 +196,82 @@ func TestGetMetric(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			statusCode, body := doRequest(t, server, http.MethodGet, tt.path, nil)
+			assert.Equal(t, tt.want.code, statusCode)
+			assert.Equal(t, tt.want.body, body)
+		})
+	}
+}
+
+func TestGetMetricWithBody(t *testing.T) {
+	type want struct {
+		code int
+		body string
+	}
+	tests := []struct {
+		name   string
+		path   string
+		metric model.Metric
+		want   want
+	}{
+		{
+			name:   "Valid gauge metric1",
+			path:   "/value",
+			metric: model.Metric{ID: "metric1", MType: model.MetricTypeGauge},
+			want: want{
+				code: http.StatusOK,
+				body: "{\"id\":\"metric1\",\"type\":\"gauge\",\"value\":123.45}",
+			},
+		},
+		{
+			name:   "Valid counter metric2",
+			path:   "/value",
+			metric: model.Metric{ID: "metric2", MType: model.MetricTypeCounter},
+			want: want{
+				code: http.StatusOK,
+				body: "{\"id\":\"metric2\",\"type\":\"counter\",\"delta\":123}",
+			},
+		},
+		{
+			name:   "Invalid MType",
+			path:   "/value",
+			metric: model.Metric{ID: "metric3", MType: model.MetricType("abrakadabra")},
+			want: want{
+				code: http.StatusNotImplemented,
+				body: "unkown MType: abrakadabra\n",
+			},
+		},
+	}
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
+	h := newTestHandler(t, metricStorer)
+	server := httptest.NewServer(h.Router)
+	defer server.Close()
+
+	metric1 := model.MetricFromGauge("metric1", model.Gauge(123.45))
+	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
+
+	gomock.InOrder(
+		metricStorer.EXPECT().LoadMetric(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Any(),
+		).Return(&metric1, nil),
+
+		metricStorer.EXPECT().LoadMetric(
+			gomock.Any(),
+			gomock.Any(),
+			gomock.Any(),
+		).Return(&metric2, nil),
+	)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := json.Marshal(tt.metric)
+			require.NoError(t, err)
+			statusCode, body := doRequest(t, server, http.MethodPost, tt.path, &data)
 			assert.Equal(t, tt.want.code, statusCode)
 			assert.Equal(t, tt.want.body, body)
 		})
