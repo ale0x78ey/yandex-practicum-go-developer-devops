@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	metricPostURL = "http://{host}:{port}/update/{metricType}/{metricName}/{metricValue}"
+	metricPostURL = "http://{host}:{port}/update"
 )
 
 type Config struct {
@@ -152,17 +153,17 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
-		request := a.client.R().
-			SetContext(ctx).
-			SetHeader("content-type", "text/plain").
-			SetPathParams(map[string]string{
-				"host":        a.config.ServerHost,
-				"port":        a.config.ServerPort,
-				"metricName":  metric.ID,
-				"metricType":  metric.MType.String(),
-				"metricValue": metric.StringValue(),
-			})
+		if data, err := json.Marshal(metric); err == nil {
+			request := a.client.R().
+				SetContext(ctx).
+				SetHeader("content-type", "application/json").
+				SetBody(data).
+				SetPathParams(map[string]string{
+					"host": a.config.ServerHost,
+					"port": a.config.ServerPort,
+				})
 
-		request.Post(metricPostURL)
+			request.Post(metricPostURL)
+		}
 	}()
 }

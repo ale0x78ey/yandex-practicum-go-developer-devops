@@ -1,10 +1,10 @@
 package rest
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"encoding/json"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -75,30 +75,30 @@ func TestUpdateMetricFromBody(t *testing.T) {
 		code int
 	}
 	tests := []struct {
-		name string
-		path string
+		name   string
+		path   string
 		metric model.Metric
-		want want
+		want   want
 	}{
 		{
-			name: "Valid gauge metric1",
-			path: "/update",
+			name:   "Valid gauge metric1",
+			path:   "/update",
 			metric: model.MetricFromGauge("metric1", model.Gauge(123.45)),
 			want: want{
 				code: http.StatusOK,
 			},
 		},
 		{
-			name: "Valid counter metric2",
-			path: "/update",
+			name:   "Valid counter metric2",
+			path:   "/update",
 			metric: model.MetricFromCounter("metric2", model.Counter(123)),
 			want: want{
 				code: http.StatusOK,
 			},
 		},
 		{
-			name: "Invalid MType",
-			path: "/update",
+			name:   "Invalid MType",
+			path:   "/update",
 			metric: model.Metric{ID: "metric3", MType: model.MetricType("abcdef")},
 			want: want{
 				code: http.StatusNotImplemented,
