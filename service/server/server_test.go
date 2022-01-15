@@ -1,0 +1,73 @@
+package server
+
+import (
+	"context"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
+	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
+)
+
+func TestNewServer(t *testing.T) {
+	_, err := NewServer(nil)
+	assert.NotNil(t, err)
+
+	metricStorer := storagemock.NewMockMetricStorer(nil)
+	srv, err := NewServer(metricStorer)
+	assert.Nil(t, err)
+	assert.NotNil(t, srv)
+}
+
+func TestServer_PushMetric(t *testing.T) {
+	tests := []struct {
+		name    string
+		metric  model.Metric
+		wantErr bool
+	}{
+		{
+			name:    "gauge metric1",
+			metric:  model.MetricFromGauge("metric1", model.Gauge(0)),
+			wantErr: false,
+		},
+		{
+			name:    "counter metric2",
+			metric:  model.MetricFromCounter("metric2", model.Counter(0)),
+			wantErr: false,
+		},
+		{
+			name: "invalid metricType for metric3",
+			metric: model.Metric{
+				Name: "metric3",
+				Type: model.MetricType("abrakadabra"),
+			},
+			wantErr: true,
+		},
+	}
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
+	srv, err := NewServer(metricStorer)
+	assert.Nil(t, err)
+
+	gomock.InOrder(
+		metricStorer.EXPECT().SaveMetric(gomock.Any(), gomock.Any()).Return(nil),
+		metricStorer.EXPECT().IncrMetric(gomock.Any(), gomock.Any()).Return(nil),
+	)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := srv.PushMetric(context.Background(), tt.metric)
+			if !tt.wantErr {
+				require.NoError(t, err)
+				return
+			}
+			assert.Error(t, err)
+		})
+	}
+}
