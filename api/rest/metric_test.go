@@ -81,7 +81,7 @@ func TestUpdateMetricWithBody(t *testing.T) {
 	}{
 		{
 			name:   "Valid gauge metric1",
-			path:   "/update",
+			path:   "/update/",
 			metric: model.MetricFromGauge("metric1", model.Gauge(123.45)),
 			want: want{
 				code: http.StatusOK,
@@ -89,7 +89,7 @@ func TestUpdateMetricWithBody(t *testing.T) {
 		},
 		{
 			name:   "Valid counter metric2",
-			path:   "/update",
+			path:   "/update/",
 			metric: model.MetricFromCounter("metric2", model.Counter(123)),
 			want: want{
 				code: http.StatusOK,
@@ -97,7 +97,7 @@ func TestUpdateMetricWithBody(t *testing.T) {
 		},
 		{
 			name:   "Invalid MType",
-			path:   "/update",
+			path:   "/update/",
 			metric: model.Metric{ID: "metric3", MType: model.MetricType("abcdef")},
 			want: want{
 				code: http.StatusNotImplemented,
@@ -212,7 +212,7 @@ func TestGetMetricWithBody(t *testing.T) {
 	}{
 		{
 			name:   "Valid gauge metric1",
-			path:   "/value",
+			path:   "/value/",
 			metric: model.Metric{ID: "metric1", MType: model.MetricTypeGauge},
 			want: want{
 				code: http.StatusOK,
@@ -221,7 +221,7 @@ func TestGetMetricWithBody(t *testing.T) {
 		},
 		{
 			name:   "Valid counter metric2",
-			path:   "/value",
+			path:   "/value/",
 			metric: model.Metric{ID: "metric2", MType: model.MetricTypeCounter},
 			want: want{
 				code: http.StatusOK,
@@ -230,7 +230,7 @@ func TestGetMetricWithBody(t *testing.T) {
 		},
 		{
 			name:   "Invalid MType",
-			path:   "/value",
+			path:   "/value/",
 			metric: model.Metric{ID: "metric3", MType: model.MetricType("abrakadabra")},
 			want: want{
 				code: http.StatusNotImplemented,

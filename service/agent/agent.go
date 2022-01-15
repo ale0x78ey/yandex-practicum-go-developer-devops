@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	metricPostURL = "http://{host}:{port}/update"
+	metricPostURL = "http://{host}:{port}/update/"
 )
 
 type Config struct {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -43,7 +42,6 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("!!! %v", metric)
 	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

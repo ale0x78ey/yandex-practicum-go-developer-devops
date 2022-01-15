@@ -33,14 +33,14 @@ func NewHandler(srv *server.Server) (*Handler, error) {
 		r.Post("/", h.updateMetricWithURL)
 	})
 
-	h.Router.Post("/update", h.updateMetricWithBody)
+	h.Router.Post("/update/", h.updateMetricWithBody)
 
 	h.Router.Route("/value/{metricType}/{metricName}", func(r chi.Router) {
 		r.Use(withMTypeValidator)
 		r.Get("/", h.getMetricWithURL)
 	})
 
-	h.Router.Post("/value", h.getMetricWithBody)
+	h.Router.Post("/value/", h.getMetricWithBody)
 
 	h.Router.Get("/", h.getMetricList)
 
