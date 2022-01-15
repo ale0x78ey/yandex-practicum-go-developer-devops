@@ -55,7 +55,7 @@ func TestWithMTypeValidator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode, _ := doRequest(t, server, http.MethodGet, tt.path)
+			statusCode, _ := doRequest(t, server, http.MethodGet, tt.path, nil)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
-func (h *Handler) updateMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateMetricFromURL(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
 	metricName := chi.URLParam(r, "metricName")
 	metricStringValue := chi.URLParam(r, "metricValue")
@@ -18,6 +19,26 @@ func (h *Handler) updateMetric(w http.ResponseWriter, r *http.Request) {
 	metric, err := model.MetricFromString(metricName, metricType, metricStringValue)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) updateMetricFromBody(w http.ResponseWriter, r *http.Request) {
+	var metric model.Metric
+	if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := metric.MType.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusNotImplemented)
 		return
 	}
 

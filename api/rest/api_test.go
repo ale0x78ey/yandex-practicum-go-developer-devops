@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"bytes"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -39,8 +41,13 @@ func doRequest(
 	t *testing.T,
 	server *httptest.Server,
 	method, path string,
+	data *[]byte,
 ) (int, string) {
-	request, err := http.NewRequest(method, server.URL+path, nil)
+	var body io.Reader
+	if data != nil {
+		body = bytes.NewBuffer(*data)
+	}
+	request, err := http.NewRequest(method, server.URL+path, body)
 	if err != nil {
 		t.Fatal(err)
 	}

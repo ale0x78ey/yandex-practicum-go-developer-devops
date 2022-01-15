@@ -43,10 +43,10 @@ func (h *Handler) initMetric() {
 	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}",
 		func(r chi.Router) {
 			r.Use(withMTypeValidator)
-			r.Post("/", h.updateMetric)
+			r.Post("/", h.updateMetricFromURL)
 		})
 
-	h.Router.Post("/update", h.updateMetric)
+	h.Router.Post("/update", h.updateMetricFromBody)
 
 	h.Router.Route("/value/{metricType}/{metricName}",
 		func(r chi.Router) {
