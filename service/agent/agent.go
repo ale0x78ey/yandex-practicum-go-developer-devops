@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -17,15 +16,14 @@ import (
 )
 
 const (
-	metricPostURL = "http://{host}:{port}/update/"
+	updateURLFormat = "http://%s/update/"
 )
 
 type Config struct {
-	PollInterval        time.Duration
-	ReportInterval      time.Duration
+	PollInterval        time.Duration `env:"POLL_INTERVAL" envDefault:"2s"`
+	ReportInterval      time.Duration `env:"REPORT_INTERVAL" envDefault:"10s"`
 	PostTimeout         time.Duration
-	ServerHost          string
-	ServerPort          string
+	ServerAddress       string `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
 	MaxIdleConns        int
 	MaxIdleConnsPerHost int
 	RetryCount          int
@@ -40,10 +38,11 @@ type metrics struct {
 }
 
 type Agent struct {
-	config Config
-	client *resty.Client
-	data   metrics
-	wg     sync.WaitGroup
+	config    Config
+	client    *resty.Client
+	data      metrics
+	wg        sync.WaitGroup
+	updateURL string
 }
 
 func NewAgent(config Config) (*Agent, error) {
@@ -60,18 +59,15 @@ func NewAgent(config Config) (*Agent, error) {
 	}
 
 	client := resty.NewWithClient(httpClient)
-	if client == nil {
-		return nil, errors.New("resty client wasn't created")
-	}
-
 	client.
 		SetRetryCount(config.RetryCount).
 		SetRetryWaitTime(config.RetryWaitTime).
 		SetRetryMaxWaitTime(config.RetryMaxWaitTime)
 
 	a := &Agent{
-		config: config,
-		client: client,
+		config:    config,
+		client:    client,
+		updateURL: fmt.Sprintf(updateURLFormat, config.ServerAddress),
 	}
 
 	return a, nil
@@ -158,13 +154,9 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 			request := a.client.R().
 				SetContext(ctx).
 				SetHeader("content-type", "application/json").
-				SetBody(data).
-				SetPathParams(map[string]string{
-					"host": a.config.ServerHost,
-					"port": a.config.ServerPort,
-				})
+				SetBody(data)
 
-			request.Post(metricPostURL)
+			request.Post(a.updateURL)
 		}
 	}()
 }

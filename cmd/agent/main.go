@@ -8,15 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caarlos0/env/v6"
+
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/agent"
 )
 
 const (
-	// TODO: https://github.com/spf13/viper
-	pollInterval        = 2 * time.Second
-	reportInterval      = 10 * time.Second
-	serverHost          = "127.0.0.1"
-	serverPort          = "8080"
 	maxIdleConns        = 15
 	maxIdleConnsPerHost = 15
 	retryCount          = 1
@@ -37,17 +34,18 @@ func main() {
 	)
 	defer stop()
 
-	agent, err := agent.NewAgent(agent.Config{
-		PollInterval:        pollInterval,
-		ReportInterval:      reportInterval,
-		ServerHost:          serverHost,
-		ServerPort:          serverPort,
+	config := agent.Config{
 		MaxIdleConns:        maxIdleConns,
 		MaxIdleConnsPerHost: maxIdleConnsPerHost,
 		RetryCount:          retryCount,
 		RetryWaitTime:       retryWaitTime,
 		RetryMaxWaitTime:    retryMaxWaitTime,
-	})
+	}
+	if err := env.Parse(&config); err != nil {
+		log.Fatalf("Failed to parse config options: %v", err)
+	}
+
+	agent, err := agent.NewAgent(config)
 	if err != nil {
 		log.Fatalf("Failed to create an agent: %v", err)
 	}
