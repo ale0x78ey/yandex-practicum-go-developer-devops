@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	StoreFile string `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
-	LoadStore bool   `env:"RESTORE" envDefault:"true"`
+	InitStore bool   `env:"RESTORE" envDefault:"true"`
 }
 
 type MetricStorage struct {
@@ -26,18 +26,6 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 	storage := &MetricStorage{
 		config:  config,
 		metrics: make(map[string]model.Metric),
-	}
-
-	if config.LoadStore {
-		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0666)
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-
-		if err := json.NewDecoder(file).Decode(&storage.metrics); err != nil {
-			return nil, err
-		}
 	}
 
 	return storage, nil
@@ -97,6 +85,34 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 	}
 
 	return metrics, nil
+}
+
+func (s *MetricStorage) Init() error {
+	if !s.config.InitStore {
+		return nil
+	}
+
+	file, err := os.OpenFile(s.config.StoreFile, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var metrics map[string]model.Metric
+	if err := json.NewDecoder(file).Decode(&metrics); err != nil {
+		return err
+	}
+
+	s.Lock()
+	defer s.Unlock()
+
+	for metricID, metric := range s.metrics {
+		metrics[metricID] = metric
+	}
+
+	s.metrics = metrics
+
+	return nil
 }
 
 func (s *MetricStorage) Flush(ctx context.Context) error {

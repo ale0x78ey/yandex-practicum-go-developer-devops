@@ -16,7 +16,7 @@ import (
 
 type restServerConfig struct {
 	ShutdownTimeout time.Duration
-	ServerAddress   string        `env:"ADDRESS" envDefault:"0.0.0.0:8080"`
+	ServerAddress   string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
 	StoreInterval   time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
 }
 
@@ -63,6 +63,10 @@ func newRestServer(config restServerConfig) (*restServer, error) {
 
 func (s restServer) Run(ctx context.Context) error {
 	go func() {
+		if err := s.metricStorage.Init(); err != nil {
+			log.Fatalf("Failed to init storage: %v", err)
+		}
+
 		storeTicker := time.NewTicker(s.config.StoreInterval)
 		defer storeTicker.Stop()
 
