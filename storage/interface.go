@@ -7,7 +7,7 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
-type MetricStorer interface {
+type MetricStorage interface {
 	SaveMetric(ctx context.Context, metric model.Metric) error
 	IncrMetric(ctx context.Context, metric model.Metric) error
 
@@ -19,4 +19,6 @@ type MetricStorer interface {
 
 	// TODO: Add offset, limit.
 	LoadMetricList(ctx context.Context) ([]model.Metric, error)
+
+	Flush(ctx context.Context) error
 }

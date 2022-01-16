@@ -16,8 +16,8 @@ func TestNewServer(t *testing.T) {
 	_, err := NewServer(nil)
 	assert.NotNil(t, err)
 
-	metricStorer := storagemock.NewMockMetricStorer(nil)
-	srv, err := NewServer(metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(nil)
+	srv, err := NewServer(metricStorage)
 	assert.Nil(t, err)
 	assert.NotNil(t, srv)
 }
@@ -50,13 +50,13 @@ func TestServer_PushMetric(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	srv, err := NewServer(metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
+	srv, err := NewServer(metricStorage)
 	assert.Nil(t, err)
 
 	gomock.InOrder(
-		metricStorer.EXPECT().SaveMetric(gomock.Any(), gomock.Any()).Return(nil),
-		metricStorer.EXPECT().IncrMetric(gomock.Any(), gomock.Any()).Return(nil),
+		metricStorage.EXPECT().SaveMetric(gomock.Any(), gomock.Any()).Return(nil),
+		metricStorage.EXPECT().IncrMetric(gomock.Any(), gomock.Any()).Return(nil),
 	)
 
 	for _, tt := range tests {

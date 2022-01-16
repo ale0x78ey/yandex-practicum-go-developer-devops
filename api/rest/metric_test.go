@@ -48,8 +48,8 @@ func TestUpdateMetricWithURL(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	h := newTestHandler(t, metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
+	h := newTestHandler(t, metricStorage)
 	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
@@ -57,8 +57,8 @@ func TestUpdateMetricWithURL(t *testing.T) {
 	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
 
 	gomock.InOrder(
-		metricStorer.EXPECT().SaveMetric(gomock.Any(), metric1).Return(nil),
-		metricStorer.EXPECT().IncrMetric(gomock.Any(), metric2).Return(nil),
+		metricStorage.EXPECT().SaveMetric(gomock.Any(), metric1).Return(nil),
+		metricStorage.EXPECT().IncrMetric(gomock.Any(), metric2).Return(nil),
 	)
 
 	for _, tt := range tests {
@@ -107,8 +107,8 @@ func TestUpdateMetricWithBody(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	h := newTestHandler(t, metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
+	h := newTestHandler(t, metricStorage)
 	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
@@ -116,8 +116,8 @@ func TestUpdateMetricWithBody(t *testing.T) {
 	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
 
 	gomock.InOrder(
-		metricStorer.EXPECT().SaveMetric(gomock.Any(), metric1).Return(nil),
-		metricStorer.EXPECT().IncrMetric(gomock.Any(), metric2).Return(nil),
+		metricStorage.EXPECT().SaveMetric(gomock.Any(), metric1).Return(nil),
+		metricStorage.EXPECT().IncrMetric(gomock.Any(), metric2).Return(nil),
 	)
 
 	for _, tt := range tests {
@@ -168,8 +168,8 @@ func TestGetMetricWithURL(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	h := newTestHandler(t, metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
+	h := newTestHandler(t, metricStorage)
 	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
@@ -177,13 +177,13 @@ func TestGetMetricWithURL(t *testing.T) {
 	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
 
 	gomock.InOrder(
-		metricStorer.EXPECT().LoadMetric(
+		metricStorage.EXPECT().LoadMetric(
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
 		).Return(&metric1, nil),
 
-		metricStorer.EXPECT().LoadMetric(
+		metricStorage.EXPECT().LoadMetric(
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
@@ -241,8 +241,8 @@ func TestGetMetricWithBody(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	h := newTestHandler(t, metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
+	h := newTestHandler(t, metricStorage)
 	server := httptest.NewServer(h.Router)
 	defer server.Close()
 
@@ -250,13 +250,13 @@ func TestGetMetricWithBody(t *testing.T) {
 	metric2 := model.MetricFromCounter("metric2", model.Counter(123))
 
 	gomock.InOrder(
-		metricStorer.EXPECT().LoadMetric(
+		metricStorage.EXPECT().LoadMetric(
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
 		).Return(&metric1, nil),
 
-		metricStorer.EXPECT().LoadMetric(
+		metricStorage.EXPECT().LoadMetric(
 			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),

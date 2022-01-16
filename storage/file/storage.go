@@ -2,25 +2,48 @@ package storagefile
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
-type MetricStorer struct {
+type Config struct {
+	StoreFile string `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
+	LoadStore bool   `env:"RESTORE" envDefault:"true"`
+}
+
+type MetricStorage struct {
 	sync.RWMutex
 
+	config  Config
 	metrics map[string]model.Metric
 }
 
-func NewMetricStorer() *MetricStorer {
-	return &MetricStorer{
+func NewMetricStorage(config Config) (*MetricStorage, error) {
+	storage := &MetricStorage{
+		config:  config,
 		metrics: make(map[string]model.Metric),
 	}
+
+	if config.LoadStore {
+		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		if err := json.NewDecoder(file).Decode(&storage.metrics); err != nil {
+			return nil, err
+		}
+	}
+
+	return storage, nil
 }
 
-func (s *MetricStorer) SaveMetric(ctx context.Context, metric model.Metric) error {
+func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -28,7 +51,7 @@ func (s *MetricStorer) SaveMetric(ctx context.Context, metric model.Metric) erro
 	return nil
 }
 
-func (s *MetricStorer) IncrMetric(ctx context.Context, metric model.Metric) error {
+func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -49,7 +72,7 @@ func (s *MetricStorer) IncrMetric(ctx context.Context, metric model.Metric) erro
 	return nil
 }
 
-func (s *MetricStorer) LoadMetric(
+func (s *MetricStorage) LoadMetric(
 	ctx context.Context,
 	metricType model.MetricType,
 	metricName string,
@@ -64,7 +87,7 @@ func (s *MetricStorer) LoadMetric(
 	return nil, nil
 }
 
-func (s *MetricStorer) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
+func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
 	s.RLock()
 	defer s.RUnlock()
 
@@ -74,4 +97,21 @@ func (s *MetricStorer) LoadMetricList(ctx context.Context) ([]model.Metric, erro
 	}
 
 	return metrics, nil
+}
+
+func (s *MetricStorage) Flush(ctx context.Context) error {
+	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	s.RLock()
+	defer s.RUnlock()
+
+	if err := json.NewEncoder(file).Encode(&s.metrics); err != nil {
+		return nil
+	}
+
+	return nil
 }

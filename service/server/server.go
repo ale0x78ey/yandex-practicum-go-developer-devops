@@ -10,16 +10,16 @@ import (
 )
 
 type Server struct {
-	storage.MetricStorer
+	storage.MetricStorage
 }
 
-func NewServer(metricStorer storage.MetricStorer) (*Server, error) {
-	if metricStorer == nil {
-		return nil, errors.New("invalid metricStorer value: nil")
+func NewServer(metricStorage storage.MetricStorage) (*Server, error) {
+	if metricStorage == nil {
+		return nil, errors.New("invalid metricStorage value: nil")
 	}
 
 	srv := &Server{
-		MetricStorer: metricStorer,
+		MetricStorage: metricStorage,
 	}
 
 	return srv, nil
@@ -28,14 +28,10 @@ func NewServer(metricStorer storage.MetricStorer) (*Server, error) {
 func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
 	switch metric.MType {
 	case model.MetricTypeGauge:
-		return s.MetricStorer.SaveMetric(ctx, metric)
+		return s.MetricStorage.SaveMetric(ctx, metric)
 	case model.MetricTypeCounter:
-		return s.MetricStorer.IncrMetric(ctx, metric)
+		return s.MetricStorage.IncrMetric(ctx, metric)
 	default:
 		return fmt.Errorf("unknown metricType: %v", metric.MType)
 	}
-}
-
-func (s *Server) Flush(ctx context.Context) error {
-	return nil
 }

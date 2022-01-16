@@ -24,8 +24,8 @@ func TestNewHandler(t *testing.T) {
 	assert.NotNil(t, srv)
 }
 
-func newTestHandler(t *testing.T, metricStorer storage.MetricStorer) *Handler {
-	srv, err := server.NewServer(metricStorer)
+func newTestHandler(t *testing.T, metricStorage storage.MetricStorage) *Handler {
+	srv, err := server.NewServer(metricStorage)
 	require.NoError(t, err)
 
 	h, err := NewHandler(srv)
