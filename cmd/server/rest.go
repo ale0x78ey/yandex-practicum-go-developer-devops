@@ -16,7 +16,7 @@ import (
 
 type restServerConfig struct {
 	ShutdownTimeout time.Duration
-	ServerAddress   string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+	ServerAddress   string        `env:"ADDRESS" envDefault:"0.0.0.0:8080"`
 	StoreInterval   time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
 }
 
