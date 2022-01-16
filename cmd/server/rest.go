@@ -62,11 +62,11 @@ func newRestServer(config restServerConfig) (*restServer, error) {
 }
 
 func (s restServer) Run(ctx context.Context) error {
-	go func() {
-		if err := s.metricStorage.Init(); err != nil {
-			log.Fatalf("Failed to init storage: %v", err)
-		}
+	if err := s.metricStorage.Init(); err != nil {
+		return err
+	}
 
+	go func() {
 		storeTicker := time.NewTicker(s.config.StoreInterval)
 		defer storeTicker.Stop()
 
