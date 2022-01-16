@@ -62,10 +62,6 @@ func newRestServer(config restServerConfig) (*restServer, error) {
 }
 
 func (s restServer) Run(ctx context.Context) error {
-	if err := s.metricStorage.Init(); err != nil {
-		return err
-	}
-
 	go func() {
 		storeTicker := time.NewTicker(s.config.StoreInterval)
 		defer storeTicker.Stop()

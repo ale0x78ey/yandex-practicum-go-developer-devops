@@ -63,20 +63,6 @@ func (mr *MockMetricStorageMockRecorder) IncrMetric(ctx, metric interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrMetric", reflect.TypeOf((*MockMetricStorage)(nil).IncrMetric), ctx, metric)
 }
 
-// Init mocks base method.
-func (m *MockMetricStorage) Init() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Init")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Init indicates an expected call of Init.
-func (mr *MockMetricStorageMockRecorder) Init() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockMetricStorage)(nil).Init))
-}
-
 // LoadMetric mocks base method.
 func (m *MockMetricStorage) LoadMetric(ctx context.Context, metricType model.MetricType, metricName string) (*model.Metric, error) {
 	m.ctrl.T.Helper()
