@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/caarlos0/env/v6"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
@@ -15,39 +16,52 @@ import (
 )
 
 const (
-	// TODO: https://github.com/spf13/viper
 	shutdownTimeout = 5 * time.Second
-	host            = "0.0.0.0"
-	port            = "8080"
 )
 
-func runServer(ctx context.Context) error {
-	metricStorer := psql.NewMetricStorer()
-	srv, err := server.NewServer(metricStorer)
+type config struct {
+	ShutdownTimeout time.Duration
+	ServerAddress   string `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+}
+
+type restServer struct {
+	config config
+	server *http.Server
+}
+
+func newRestServer(config config) (*restServer, error) {
+	s, err := server.NewServer(psql.NewMetricStorer())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	h, err := rest.NewHandler(srv)
+	h, err := rest.NewHandler(s)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	httpServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", host, port),
-		Handler: h.Router,
+	server := &restServer{
+		server: &http.Server{
+			Addr:    config.ServerAddress,
+			Handler: h.Router,
+		},
+		config: config,
 	}
 
+	return server, nil
+}
+
+func (s restServer) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
-		ctx2, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
 		defer cancel()
-		if err := httpServer.Shutdown(ctx2); err != nil {
-			log.Fatalf("Server failed: %v", err)
+		if err := s.server.Shutdown(ctx); err != nil {
+			log.Fatalf("HTTP Server failed: %v", err)
 		}
 	}()
 
-	if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
+	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
 
@@ -63,7 +77,19 @@ func main() {
 	)
 	defer stop()
 
-	if err := runServer(ctx); err != nil {
-		log.Fatalf("Server failed: %v", err)
+	config := config{
+		ShutdownTimeout: shutdownTimeout,
+	}
+	if err := env.Parse(&config); err != nil {
+		log.Fatalf("Failed to parse config options: %v", err)
+	}
+
+	server, err := newRestServer(config)
+	if err != nil {
+		log.Fatalf("Failed to create a server: %v", err)
+	}
+
+	if err := server.Run(ctx); err != nil {
+		log.Fatalf("Failed to run a server: %v", err)
 	}
 }
