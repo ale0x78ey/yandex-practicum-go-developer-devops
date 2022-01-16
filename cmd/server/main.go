@@ -21,12 +21,16 @@ const (
 
 type config struct {
 	ShutdownTimeout time.Duration
-	ServerAddress   string `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+	ServerAddress   string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+	StoreInterval   time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
+	StoreFile       string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
+	Restore         bool          `env:"RESTORE" envDefault:"true"`
 }
 
 type restServer struct {
-	config config
-	server *http.Server
+	config     config
+	server     *server.Server
+	httpServer *http.Server
 }
 
 func newRestServer(config config) (*restServer, error) {
@@ -41,11 +45,12 @@ func newRestServer(config config) (*restServer, error) {
 	}
 
 	server := &restServer{
-		server: &http.Server{
+		config: config,
+		server: s,
+		httpServer: &http.Server{
 			Addr:    config.ServerAddress,
 			Handler: h.Router,
 		},
-		config: config,
 	}
 
 	return server, nil
@@ -53,15 +58,24 @@ func newRestServer(config config) (*restServer, error) {
 
 func (s restServer) Run(ctx context.Context) error {
 	go func() {
-		<-ctx.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
-		defer cancel()
-		if err := s.server.Shutdown(ctx); err != nil {
-			log.Fatalf("HTTP Server failed: %v", err)
+		for {
+			select {
+			case <-ctx.Done():
+				ctx, cancel := context.WithTimeout(
+					context.Background(), s.config.ShutdownTimeout)
+				defer cancel()
+				if err := s.httpServer.Shutdown(ctx); err != nil {
+					log.Fatalf("HTTP Server failed: %v", err)
+				}
+				if err := s.server.Flush(ctx); err != nil {
+					log.Fatalf("Failed to flush: %v", err)
+				}
+				break
+			}
 		}
 	}()
 
-	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
+	if err := s.httpServer.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
 

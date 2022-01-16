@@ -35,3 +35,7 @@ func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
 		return fmt.Errorf("unknown metricType: %v", metric.MType)
 	}
 }
+
+func (s *Server) Flush(ctx context.Context) error {
+	return nil
+}
