@@ -12,7 +12,7 @@ import (
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/psql"
+	storagefile "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
 )
 
 const (
@@ -34,7 +34,7 @@ type restServer struct {
 }
 
 func newRestServer(config config) (*restServer, error) {
-	s, err := server.NewServer(psql.NewMetricStorer())
+	s, err := server.NewServer(storagefile.NewMetricStorer())
 	if err != nil {
 		return nil, err
 	}

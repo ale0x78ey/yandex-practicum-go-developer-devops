@@ -1,4 +1,4 @@
-package psql
+package storagefile
 
 import (
 	"context"
