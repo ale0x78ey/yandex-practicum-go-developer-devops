@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 
@@ -29,13 +30,14 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 	}
 
 	if config.InitStore {
-		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0777)
+		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return nil, err
 		}
 		defer file.Close()
 
-		if err := json.NewDecoder(file).Decode(&storage.metrics); err != nil {
+		err = json.NewDecoder(file).Decode(&storage.metrics)
+		if err != nil && err != io.EOF {
 			return nil, err
 		}
 	}
@@ -100,7 +102,7 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 }
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
-	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
