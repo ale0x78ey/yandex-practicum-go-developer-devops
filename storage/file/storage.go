@@ -29,7 +29,7 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 	}
 
 	if config.InitStore {
-		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0666)
+		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0777)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 }
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
-	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -62,6 +63,10 @@ func newRestServer(config restServerConfig) (*restServer, error) {
 }
 
 func (s restServer) Run(ctx context.Context) error {
+	if s.config.StoreInterval <= 0 {
+		return fmt.Errorf("invalid non-positive StoreInterval=%v", s.config.StoreInterval)
+	}
+
 	go func() {
 		storeTicker := time.NewTicker(s.config.StoreInterval)
 		defer storeTicker.Stop()
