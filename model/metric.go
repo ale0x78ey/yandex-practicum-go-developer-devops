@@ -55,6 +55,22 @@ func MetricFromString(metricName string, metricType MetricType, value string) (M
 	}
 }
 
+func (m Metric) Validate() error {
+	switch m.MType {
+	case MetricTypeGauge:
+		if m.Value == nil {
+			return fmt.Errorf("invalid Value == nil for MType: %s", m.MType)
+		}
+	case MetricTypeCounter:
+		if m.Delta == nil {
+			return fmt.Errorf("invalid Delta == nil for MType: %s", m.MType)
+		}
+	default:
+		return fmt.Errorf("unkown MType: %s", m.MType)
+	}
+	return nil
+}
+
 func (m Metric) String() string {
 	switch m.MType {
 	case MetricTypeGauge:

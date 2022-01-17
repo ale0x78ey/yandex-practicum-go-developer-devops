@@ -42,6 +42,11 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := metric.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

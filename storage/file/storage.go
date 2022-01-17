@@ -36,8 +36,7 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 		}
 		defer file.Close()
 
-		err = json.NewDecoder(file).Decode(&storage.metrics)
-		if err != nil && err != io.EOF {
+		if err := json.NewDecoder(file).Decode(&storage.metrics); err != nil && err != io.EOF {
 			return nil, err
 		}
 	}
