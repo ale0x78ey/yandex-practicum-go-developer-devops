@@ -15,10 +15,10 @@ import (
 
 type restServerConfig struct {
 	ShutdownTimeout time.Duration
-	ServerAddress   string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
-	InitStore       bool          `env:"RESTORE" envDefault:"true"`
-	StoreInterval   time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
-	StoreFile       string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
+	ServerAddress   string        `env:"ADDRESS"`
+	InitStore       bool          `env:"RESTORE"`
+	StoreInterval   time.Duration `env:"STORE_INTERVAL"`
+	StoreFile       string        `env:"STORE_FILE"`
 }
 
 type restServer struct {
@@ -29,7 +29,6 @@ type restServer struct {
 }
 
 func newRestServer(config restServerConfig) (*restServer, error) {
-	log.Printf("!!!config3!!! restore=%v", config.InitStore)
 	metricStorage, err := storagefile.NewMetricStorage(config.StoreFile, config.InitStore)
 	if err != nil {
 		log.Fatalf("Failed to create metric storage: %v", err)

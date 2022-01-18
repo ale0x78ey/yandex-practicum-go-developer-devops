@@ -12,7 +12,11 @@ import (
 )
 
 const (
-	shutdownTimeout = 3 * time.Second
+	defaultShutdownTimeout = 3 * time.Second
+	defaultServerAddress   = "127.0.0.1:8080"
+	defaultInitStore       = true
+	defaultStoreInterval   = 300 * time.Second
+	defaultStoreFile       = "/tmp/devops-metrics-db.json"
 )
 
 func main() {
@@ -25,21 +29,18 @@ func main() {
 	defer stop()
 
 	config := restServerConfig{
-		ShutdownTimeout: shutdownTimeout,
+		ShutdownTimeout: defaultShutdownTimeout,
 	}
+
+	flag.StringVar(&config.ServerAddress, "a", defaultServerAddress, "ADDRESS")
+	flag.BoolVar(&config.InitStore, "r", defaultInitStore, "RESTORE")
+	flag.DurationVar(&config.StoreInterval, "i", defaultStoreInterval, "STORE_INTERVAL")
+	flag.StringVar(&config.StoreFile, "f", defaultStoreFile, "STORE_FILE")
+	flag.Parse()
+
 	if err := env.Parse(&config); err != nil {
 		log.Fatalf("Failed to parse REST server config options: %v", err)
 	}
-
-	log.Printf("!!!config1!!! restore=%v", config.InitStore)
-
-	flag.StringVar(&config.ServerAddress, "a", config.ServerAddress, "ADDRESS")
-	flag.BoolVar(&config.InitStore, "r", config.InitStore, "RESTORE")
-	flag.DurationVar(&config.StoreInterval, "i", config.StoreInterval, "STORE_INTERVAL")
-	flag.StringVar(&config.StoreFile, "f", config.StoreFile, "STORE_FILE")
-	flag.Parse()
-
-	log.Printf("!!!config2!!! restore=%v", config.InitStore)
 
 	server, err := newRestServer(config)
 	if err != nil {

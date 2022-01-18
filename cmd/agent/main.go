@@ -15,11 +15,14 @@ import (
 )
 
 const (
-	maxIdleConns        = 15
-	maxIdleConnsPerHost = 15
-	retryCount          = 1
-	retryWaitTime       = 100 * time.Millisecond
-	retryMaxWaitTime    = 900 * time.Millisecond
+	defaultMaxIdleConns        = 15
+	defaultMaxIdleConnsPerHost = 15
+	defaultRetryCount          = 1
+	defaultRetryWaitTime       = 100 * time.Millisecond
+	defaultRetryMaxWaitTime    = 900 * time.Millisecond
+	defaultPollInterval        = 02 * time.Second
+	defaultReportInterval      = 10 * time.Second
+	defaultServerAddress       = "127.0.0.1:8080"
 )
 
 func init() {
@@ -36,20 +39,21 @@ func main() {
 	defer stop()
 
 	config := agent.Config{
-		MaxIdleConns:        maxIdleConns,
-		MaxIdleConnsPerHost: maxIdleConnsPerHost,
-		RetryCount:          retryCount,
-		RetryWaitTime:       retryWaitTime,
-		RetryMaxWaitTime:    retryMaxWaitTime,
+		MaxIdleConns:        defaultMaxIdleConns,
+		MaxIdleConnsPerHost: defaultMaxIdleConnsPerHost,
+		RetryCount:          defaultRetryCount,
+		RetryWaitTime:       defaultRetryWaitTime,
+		RetryMaxWaitTime:    defaultRetryMaxWaitTime,
 	}
+
+	flag.StringVar(&config.ServerAddress, "a", defaultServerAddress, "ADDRESS")
+	flag.DurationVar(&config.ReportInterval, "r", defaultReportInterval, "REPORT_INTERVAL")
+	flag.DurationVar(&config.PollInterval, "p", defaultPollInterval, "POLL_INTERVAL")
+	flag.Parse()
+
 	if err := env.Parse(&config); err != nil {
 		log.Fatalf("Failed to parse config options: %v", err)
 	}
-
-	flag.StringVar(&config.ServerAddress, "a", config.ServerAddress, "ADDRESS")
-	flag.DurationVar(&config.ReportInterval, "r", config.ReportInterval, "REPORT_INTERVAL")
-	flag.DurationVar(&config.PollInterval, "p", config.PollInterval, "POLL_INTERVAL")
-	flag.Parse()
 
 	agent, err := agent.NewAgent(config)
 	if err != nil {
