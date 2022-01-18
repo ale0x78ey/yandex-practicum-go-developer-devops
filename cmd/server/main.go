@@ -31,11 +31,15 @@ func main() {
 		log.Fatalf("Failed to parse REST server config options: %v", err)
 	}
 
+	log.Printf("!!!config1!!! restore=%v", config.InitStore)
+
 	flag.StringVar(&config.ServerAddress, "a", config.ServerAddress, "ADDRESS")
 	flag.BoolVar(&config.InitStore, "r", config.InitStore, "RESTORE")
 	flag.DurationVar(&config.StoreInterval, "i", config.StoreInterval, "STORE_INTERVAL")
 	flag.StringVar(&config.StoreFile, "f", config.StoreFile, "STORE_FILE")
 	flag.Parse()
+
+	log.Printf("!!!config2!!! restore=%v", config.InitStore)
 
 	server, err := newRestServer(config)
 	if err != nil {

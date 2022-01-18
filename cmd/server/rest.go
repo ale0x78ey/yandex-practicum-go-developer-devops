@@ -29,6 +29,7 @@ type restServer struct {
 }
 
 func newRestServer(config restServerConfig) (*restServer, error) {
+	log.Printf("!!!config3!!! restore=%v", config.InitStore)
 	metricStorage, err := storagefile.NewMetricStorage(config.StoreFile, config.InitStore)
 	if err != nil {
 		log.Fatalf("Failed to create metric storage: %v", err)
