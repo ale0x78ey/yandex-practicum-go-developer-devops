@@ -82,7 +82,7 @@ func (s restServer) Run(ctx context.Context) error {
 				if err := s.metricStorage.Flush(ctx); err != nil {
 					log.Fatalf("Failed to flush: %v", err)
 				}
-				break
+				return
 			}
 		}
 	}()
