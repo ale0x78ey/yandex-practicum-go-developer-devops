@@ -25,7 +25,7 @@ func NewMetricStorage(storeFile string, initStore bool) (*MetricStorage, error) 
 	}
 
 	if initStore {
-		file, err := os.OpenFile(storeFile, os.O_RDONLY|os.O_CREATE, 0644)
+		file, err := os.OpenFile(storeFile, os.O_RDONLY|os.O_CREATE, 0666)
 		if err != nil {
 			return nil, err
 		}
@@ -96,7 +96,7 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 }
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
-	file, err := os.OpenFile(s.storeFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(s.storeFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
