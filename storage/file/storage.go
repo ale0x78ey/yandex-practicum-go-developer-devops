@@ -11,26 +11,21 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
-type Config struct {
-	StoreFile string `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
-	InitStore bool   `env:"RESTORE" envDefault:"true"`
-}
-
 type MetricStorage struct {
 	sync.RWMutex
 
-	config  Config
-	metrics map[string]model.Metric
+	storeFile string
+	metrics   map[string]model.Metric
 }
 
-func NewMetricStorage(config Config) (*MetricStorage, error) {
+func NewMetricStorage(storeFile string, initStore bool) (*MetricStorage, error) {
 	storage := &MetricStorage{
-		config:  config,
-		metrics: make(map[string]model.Metric),
+		storeFile: storeFile,
+		metrics:   make(map[string]model.Metric),
 	}
 
-	if config.InitStore {
-		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0644)
+	if initStore {
+		file, err := os.OpenFile(storeFile, os.O_RDONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +96,7 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 }
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
-	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(s.storeFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}

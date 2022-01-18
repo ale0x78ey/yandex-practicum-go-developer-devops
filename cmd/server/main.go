@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"os/signal"
 	"syscall"
@@ -23,14 +24,20 @@ func main() {
 	)
 	defer stop()
 
-	serverConfig := restServerConfig{
+	config := restServerConfig{
 		ShutdownTimeout: shutdownTimeout,
 	}
-	if err := env.Parse(&serverConfig); err != nil {
+	if err := env.Parse(&config); err != nil {
 		log.Fatalf("Failed to parse REST server config options: %v", err)
 	}
 
-	server, err := newRestServer(serverConfig)
+	flag.StringVar(&config.ServerAddress, "a", config.ServerAddress, "ADDRESS")
+	flag.BoolVar(&config.InitStore, "r", config.InitStore, "RESTORE")
+	flag.DurationVar(&config.StoreInterval, "i", config.StoreInterval, "STORE_INTERVAL")
+	flag.StringVar(&config.StoreFile, "f", config.StoreFile, "STORE_FILE")
+	flag.Parse()
+
+	server, err := newRestServer(config)
 	if err != nil {
 		log.Fatalf("Failed to create a server: %v", err)
 	}

@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caarlos0/env/v6"
-
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
@@ -18,7 +16,9 @@ import (
 type restServerConfig struct {
 	ShutdownTimeout time.Duration
 	ServerAddress   string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+	InitStore       bool          `env:"RESTORE" envDefault:"true"`
 	StoreInterval   time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
+	StoreFile       string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
 }
 
 type restServer struct {
@@ -29,12 +29,7 @@ type restServer struct {
 }
 
 func newRestServer(config restServerConfig) (*restServer, error) {
-	var metricStorageConfig storagefile.Config
-	if err := env.Parse(&metricStorageConfig); err != nil {
-		log.Fatalf("Failed to parse metric storage config options: %v", err)
-	}
-
-	metricStorage, err := storagefile.NewMetricStorage(metricStorageConfig)
+	metricStorage, err := storagefile.NewMetricStorage(config.StoreFile, config.InitStore)
 	if err != nil {
 		log.Fatalf("Failed to create metric storage: %v", err)
 	}

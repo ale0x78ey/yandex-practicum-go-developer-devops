@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"math/rand"
 	"os/signal"
@@ -44,6 +45,11 @@ func main() {
 	if err := env.Parse(&config); err != nil {
 		log.Fatalf("Failed to parse config options: %v", err)
 	}
+
+	flag.StringVar(&config.ServerAddress, "a", config.ServerAddress, "ADDRESS")
+	flag.DurationVar(&config.ReportInterval, "r", config.ReportInterval, "REPORT_INTERVAL")
+	flag.DurationVar(&config.PollInterval, "p", config.PollInterval, "POLL_INTERVAL")
+	flag.Parse()
 
 	agent, err := agent.NewAgent(config)
 	if err != nil {
