@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 
+	"log"
+
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
@@ -34,6 +36,8 @@ func NewMetricStorage(storeFile string, initStore bool) (*MetricStorage, error) 
 		if err := json.NewDecoder(file).Decode(&storage.metrics); err != nil && err != io.EOF {
 			return nil, err
 		}
+
+		log.Printf("!!!init!!! %s : %v", storeFile, storage.metrics)
 	}
 
 	return storage, nil
@@ -104,6 +108,8 @@ func (s *MetricStorage) Flush(ctx context.Context) error {
 
 	s.RLock()
 	defer s.RUnlock()
+
+	log.Printf("!!!flush!!! %s : %v", s.storeFile, s.metrics)
 
 	if err := json.NewEncoder(file).Encode(&s.metrics); err != nil {
 		return nil
