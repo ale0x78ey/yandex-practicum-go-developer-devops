@@ -76,11 +76,11 @@ func (s restServer) Run(ctx context.Context) error {
 				ctx, cancel := context.WithTimeout(
 					context.Background(), s.config.ShutdownTimeout)
 				defer cancel()
-				if err := s.httpServer.Shutdown(ctx); err != nil {
-					log.Fatalf("HTTP Server failed: %v", err)
-				}
 				if err := s.metricStorage.Flush(ctx); err != nil {
 					log.Fatalf("Failed to flush: %v", err)
+				}
+				if err := s.httpServer.Shutdown(ctx); err != nil {
+					log.Fatalf("HTTP Server failed: %v", err)
 				}
 				return
 			}
