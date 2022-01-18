@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	shutdownTimeout = 1 * time.Second
+	shutdownTimeout = 3 * time.Second
 )
 
 func main() {
