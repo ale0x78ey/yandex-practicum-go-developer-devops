@@ -27,17 +27,20 @@ func NewMetricStorage(storeFile string, initStore bool) (*MetricStorage, error) 
 	}
 
 	if initStore {
+		log.Printf("!!!init1!!! %s : %v", storeFile, storage.metrics)
 		file, err := os.OpenFile(storeFile, os.O_RDONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return nil, err
 		}
 		defer file.Close()
+		log.Printf("!!!init2!!! %s : %v", storeFile, storage.metrics)
 
 		if err := json.NewDecoder(file).Decode(&storage.metrics); err != nil && err != io.EOF {
+			log.Printf("!!!init err!!! %s : %v : %v", storeFile, storage.metrics, err)
 			return nil, err
 		}
 
-		log.Printf("!!!init!!! %s : %v", storeFile, storage.metrics)
+		log.Printf("!!!init3!!! %s : %v", storeFile, storage.metrics)
 	}
 
 	return storage, nil
