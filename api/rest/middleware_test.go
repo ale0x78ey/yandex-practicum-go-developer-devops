@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWithMetricTypeValidator(t *testing.T) {
+func TestWithMTypeValidator(t *testing.T) {
 	type want struct {
 		code int
 	}
@@ -19,21 +19,21 @@ func TestWithMetricTypeValidator(t *testing.T) {
 		want want
 	}{
 		{
-			name: "Valid Gauge MetricType",
+			name: "Valid Gauge MType",
 			path: "/smth/gauge",
 			want: want{
 				code: http.StatusOK,
 			},
 		},
 		{
-			name: "Valid Counter MetricType",
+			name: "Valid Counter MType",
 			path: "/smth/counter",
 			want: want{
 				code: http.StatusOK,
 			},
 		},
 		{
-			name: "Invalid MetricType",
+			name: "Invalid MType",
 			path: "/smth/abrakadabra",
 			want: want{
 				code: http.StatusNotImplemented,
@@ -44,7 +44,7 @@ func TestWithMetricTypeValidator(t *testing.T) {
 	r := chi.NewRouter()
 
 	r.Route("/smth/{metricType}", func(r chi.Router) {
-		r.Use(withMetricTypeValidator)
+		r.Use(withMTypeValidator)
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		})
@@ -55,7 +55,7 @@ func TestWithMetricTypeValidator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode, _ := doRequest(t, server, http.MethodGet, tt.path)
+			statusCode, _ := doRequest(t, server, http.MethodGet, tt.path, nil)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}

@@ -7,10 +7,10 @@ import (
 
 type (
 	Metric struct {
-		Name         string
-		Type         MetricType
-		GaugeValue   Gauge
-		CounterValue Counter
+		ID    string     `json:"id"`
+		MType MetricType `json:"type"`
+		Delta *Counter   `json:"delta,omitempty"`
+		Value *Gauge     `json:"value,omitempty"`
 	}
 
 	MetricType string
@@ -18,19 +18,19 @@ type (
 	Counter    int64
 )
 
-func MetricFromGauge(name string, value Gauge) Metric {
+func MetricFromGauge(id string, value Gauge) Metric {
 	return Metric{
-		Name:       name,
-		Type:       MetricTypeGauge,
-		GaugeValue: value,
+		ID:    id,
+		MType: MetricTypeGauge,
+		Value: &value,
 	}
 }
 
-func MetricFromCounter(name string, value Counter) Metric {
+func MetricFromCounter(id string, value Counter) Metric {
 	return Metric{
-		Name:         name,
-		Type:         MetricTypeCounter,
-		CounterValue: value,
+		ID:    id,
+		MType: MetricTypeCounter,
+		Delta: &value,
 	}
 }
 
@@ -51,16 +51,32 @@ func MetricFromString(metricName string, metricType MetricType, value string) (M
 		return MetricFromCounter(metricName, counterValue), nil
 
 	default:
-		return Metric{}, fmt.Errorf("unkown MetricType: %s", metricType)
+		return Metric{}, fmt.Errorf("unkown MType: %s", metricType)
 	}
 }
 
-func (m *Metric) StringValue() string {
-	switch m.Type {
+func (m Metric) Validate() error {
+	switch m.MType {
 	case MetricTypeGauge:
-		return m.GaugeValue.String()
+		if m.Value == nil {
+			return fmt.Errorf("invalid Value == nil for MType: %s", m.MType)
+		}
 	case MetricTypeCounter:
-		return m.CounterValue.String()
+		if m.Delta == nil {
+			return fmt.Errorf("invalid Delta == nil for MType: %s", m.MType)
+		}
+	default:
+		return fmt.Errorf("unkown MType: %s", m.MType)
+	}
+	return nil
+}
+
+func (m Metric) String() string {
+	switch m.MType {
+	case MetricTypeGauge:
+		return m.Value.String()
+	case MetricTypeCounter:
+		return m.Delta.String()
 	default:
 		return ""
 	}
@@ -76,7 +92,7 @@ func (t MetricType) Validate() error {
 	case MetricTypeGauge, MetricTypeCounter:
 		return nil
 	default:
-		return fmt.Errorf("unkown MetricType: %s", t)
+		return fmt.Errorf("unkown MType: %s", t)
 	}
 }
 

@@ -2,7 +2,7 @@ package agent
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -16,15 +16,14 @@ import (
 )
 
 const (
-	metricPostURL = "http://{host}:{port}/update/{metricType}/{metricName}/{metricValue}"
+	updateURLFormat = "http://%s/update/"
 )
 
 type Config struct {
-	PollInterval        time.Duration
-	ReportInterval      time.Duration
+	PollInterval        time.Duration `env:"POLL_INTERVAL"`
+	ReportInterval      time.Duration `env:"REPORT_INTERVAL"`
 	PostTimeout         time.Duration
-	ServerHost          string
-	ServerPort          string
+	ServerAddress       string `env:"ADDRESS"`
 	MaxIdleConns        int
 	MaxIdleConnsPerHost int
 	RetryCount          int
@@ -39,10 +38,11 @@ type metrics struct {
 }
 
 type Agent struct {
-	config Config
-	client *resty.Client
-	data   metrics
-	wg     sync.WaitGroup
+	config    Config
+	client    *resty.Client
+	data      metrics
+	wg        sync.WaitGroup
+	updateURL string
 }
 
 func NewAgent(config Config) (*Agent, error) {
@@ -59,18 +59,15 @@ func NewAgent(config Config) (*Agent, error) {
 	}
 
 	client := resty.NewWithClient(httpClient)
-	if client == nil {
-		return nil, errors.New("resty client wasn't created")
-	}
-
 	client.
 		SetRetryCount(config.RetryCount).
 		SetRetryWaitTime(config.RetryWaitTime).
 		SetRetryMaxWaitTime(config.RetryMaxWaitTime)
 
 	a := &Agent{
-		config: config,
-		client: client,
+		config:    config,
+		client:    client,
+		updateURL: fmt.Sprintf(updateURLFormat, config.ServerAddress),
 	}
 
 	return a, nil
@@ -111,39 +108,40 @@ func (a *Agent) pollMetrics() {
 }
 
 func (a *Agent) postMetrics(ctx context.Context) {
-	ctx2, cancel := context.WithTimeout(ctx, a.config.PostTimeout)
+	ctx, cancel := context.WithTimeout(ctx, a.config.PostTimeout)
 	defer cancel()
 
 	m := &a.data.memStats
 
-	a.post(ctx2, model.MetricFromGauge("Alloc", model.Gauge(m.Alloc)))
-	a.post(ctx2, model.MetricFromGauge("BuckHashSys", model.Gauge(m.BuckHashSys)))
-	a.post(ctx2, model.MetricFromGauge("Frees", model.Gauge(m.Frees)))
-	a.post(ctx2, model.MetricFromGauge("GCCPUFraction", model.Gauge(m.GCCPUFraction)))
-	a.post(ctx2, model.MetricFromGauge("GCSys", model.Gauge(m.GCSys)))
-	a.post(ctx2, model.MetricFromGauge("HeapAlloc", model.Gauge(m.HeapAlloc)))
-	a.post(ctx2, model.MetricFromGauge("HeapIdle", model.Gauge(m.HeapIdle)))
-	a.post(ctx2, model.MetricFromGauge("HeapInuse", model.Gauge(m.HeapInuse)))
-	a.post(ctx2, model.MetricFromGauge("HeapObjects", model.Gauge(m.HeapObjects)))
-	a.post(ctx2, model.MetricFromGauge("HeapReleased", model.Gauge(m.HeapReleased)))
-	a.post(ctx2, model.MetricFromGauge("HeapSys", model.Gauge(m.HeapSys)))
-	a.post(ctx2, model.MetricFromGauge("LastGC", model.Gauge(m.LastGC)))
-	a.post(ctx2, model.MetricFromGauge("Lookups", model.Gauge(m.Lookups)))
-	a.post(ctx2, model.MetricFromGauge("MCacheInuse", model.Gauge(m.MCacheInuse)))
-	a.post(ctx2, model.MetricFromGauge("MCacheSys", model.Gauge(m.MCacheSys)))
-	a.post(ctx2, model.MetricFromGauge("MSpanInuse", model.Gauge(m.MSpanInuse)))
-	a.post(ctx2, model.MetricFromGauge("MSpanSys", model.Gauge(m.MSpanSys)))
-	a.post(ctx2, model.MetricFromGauge("Mallocs", model.Gauge(m.Mallocs)))
-	a.post(ctx2, model.MetricFromGauge("NextGC", model.Gauge(m.NextGC)))
-	a.post(ctx2, model.MetricFromGauge("NumForcedGC", model.Gauge(m.NumForcedGC)))
-	a.post(ctx2, model.MetricFromGauge("NumGC", model.Gauge(m.NumGC)))
-	a.post(ctx2, model.MetricFromGauge("OtherSys", model.Gauge(m.OtherSys)))
-	a.post(ctx2, model.MetricFromGauge("PauseTotalNs", model.Gauge(m.PauseTotalNs)))
-	a.post(ctx2, model.MetricFromGauge("StackInuse", model.Gauge(m.StackInuse)))
-	a.post(ctx2, model.MetricFromGauge("StackSys", model.Gauge(m.StackSys)))
-	a.post(ctx2, model.MetricFromGauge("Sys", model.Gauge(m.Sys)))
-	a.post(ctx2, model.MetricFromGauge("RandomValue", model.Gauge(a.data.randomValue)))
-	a.post(ctx2, model.MetricFromCounter("PollCount", model.Counter(a.data.pollCount)))
+	a.post(ctx, model.MetricFromGauge("Alloc", model.Gauge(m.Alloc)))
+	a.post(ctx, model.MetricFromGauge("TotalAlloc", model.Gauge(m.TotalAlloc)))
+	a.post(ctx, model.MetricFromGauge("BuckHashSys", model.Gauge(m.BuckHashSys)))
+	a.post(ctx, model.MetricFromGauge("Frees", model.Gauge(m.Frees)))
+	a.post(ctx, model.MetricFromGauge("GCCPUFraction", model.Gauge(m.GCCPUFraction)))
+	a.post(ctx, model.MetricFromGauge("GCSys", model.Gauge(m.GCSys)))
+	a.post(ctx, model.MetricFromGauge("HeapAlloc", model.Gauge(m.HeapAlloc)))
+	a.post(ctx, model.MetricFromGauge("HeapIdle", model.Gauge(m.HeapIdle)))
+	a.post(ctx, model.MetricFromGauge("HeapInuse", model.Gauge(m.HeapInuse)))
+	a.post(ctx, model.MetricFromGauge("HeapObjects", model.Gauge(m.HeapObjects)))
+	a.post(ctx, model.MetricFromGauge("HeapReleased", model.Gauge(m.HeapReleased)))
+	a.post(ctx, model.MetricFromGauge("HeapSys", model.Gauge(m.HeapSys)))
+	a.post(ctx, model.MetricFromGauge("LastGC", model.Gauge(m.LastGC)))
+	a.post(ctx, model.MetricFromGauge("Lookups", model.Gauge(m.Lookups)))
+	a.post(ctx, model.MetricFromGauge("MCacheInuse", model.Gauge(m.MCacheInuse)))
+	a.post(ctx, model.MetricFromGauge("MCacheSys", model.Gauge(m.MCacheSys)))
+	a.post(ctx, model.MetricFromGauge("MSpanInuse", model.Gauge(m.MSpanInuse)))
+	a.post(ctx, model.MetricFromGauge("MSpanSys", model.Gauge(m.MSpanSys)))
+	a.post(ctx, model.MetricFromGauge("Mallocs", model.Gauge(m.Mallocs)))
+	a.post(ctx, model.MetricFromGauge("NextGC", model.Gauge(m.NextGC)))
+	a.post(ctx, model.MetricFromGauge("NumForcedGC", model.Gauge(m.NumForcedGC)))
+	a.post(ctx, model.MetricFromGauge("NumGC", model.Gauge(m.NumGC)))
+	a.post(ctx, model.MetricFromGauge("OtherSys", model.Gauge(m.OtherSys)))
+	a.post(ctx, model.MetricFromGauge("PauseTotalNs", model.Gauge(m.PauseTotalNs)))
+	a.post(ctx, model.MetricFromGauge("StackInuse", model.Gauge(m.StackInuse)))
+	a.post(ctx, model.MetricFromGauge("StackSys", model.Gauge(m.StackSys)))
+	a.post(ctx, model.MetricFromGauge("Sys", model.Gauge(m.Sys)))
+	a.post(ctx, model.MetricFromGauge("RandomValue", model.Gauge(a.data.randomValue)))
+	a.post(ctx, model.MetricFromCounter("PollCount", model.Counter(a.data.pollCount)))
 
 	a.wg.Wait()
 }
@@ -152,17 +150,13 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
-		request := a.client.R().
-			SetContext(ctx).
-			SetHeader("content-type", "text/plain").
-			SetPathParams(map[string]string{
-				"host":        a.config.ServerHost,
-				"port":        a.config.ServerPort,
-				"metricName":  metric.Name,
-				"metricType":  metric.Type.String(),
-				"metricValue": metric.StringValue(),
-			})
+		if data, err := json.Marshal(metric); err == nil {
+			request := a.client.R().
+				SetContext(ctx).
+				SetHeader("content-type", "application/json").
+				SetBody(data)
 
-		request.Post(metricPostURL)
+			request.Post(a.updateURL)
+		}
 	}()
 }

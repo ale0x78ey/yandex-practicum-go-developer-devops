@@ -16,8 +16,8 @@ func TestNewServer(t *testing.T) {
 	_, err := NewServer(nil)
 	assert.NotNil(t, err)
 
-	metricStorer := storagemock.NewMockMetricStorer(nil)
-	srv, err := NewServer(metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(nil)
+	srv, err := NewServer(metricStorage)
 	assert.Nil(t, err)
 	assert.NotNil(t, srv)
 }
@@ -41,23 +41,22 @@ func TestServer_PushMetric(t *testing.T) {
 		{
 			name: "invalid metricType for metric3",
 			metric: model.Metric{
-				Name: "metric3",
-				Type: model.MetricType("abrakadabra"),
+				ID:    "metric3",
+				MType: model.MetricType("abrakadabra"),
 			},
 			wantErr: true,
 		},
 	}
 
 	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
-	metricStorer := storagemock.NewMockMetricStorer(mockCtrl)
-	srv, err := NewServer(metricStorer)
+	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
+	srv, err := NewServer(metricStorage)
 	assert.Nil(t, err)
 
 	gomock.InOrder(
-		metricStorer.EXPECT().SaveMetric(gomock.Any(), gomock.Any()).Return(nil),
-		metricStorer.EXPECT().IncrMetric(gomock.Any(), gomock.Any()).Return(nil),
+		metricStorage.EXPECT().SaveMetric(gomock.Any(), gomock.Any()).Return(nil),
+		metricStorage.EXPECT().IncrMetric(gomock.Any(), gomock.Any()).Return(nil),
 	)
 
 	for _, tt := range tests {

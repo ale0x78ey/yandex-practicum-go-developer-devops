@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
-func (h *Handler) updateMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
 	metricName := chi.URLParam(r, "metricName")
 	metricStringValue := chi.URLParam(r, "metricValue")
@@ -29,7 +30,32 @@ func (h *Handler) updateMetric(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
+	var metric model.Metric
+	if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := metric.MType.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusNotImplemented)
+		return
+	}
+
+	if err := metric.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
 	metricName := chi.URLParam(r, "metricName")
 
@@ -46,7 +72,41 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, metric.StringValue())
+	fmt.Fprint(w, metric.String())
+}
+
+func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {
+	var metricRequest model.Metric
+	if err := json.NewDecoder(r.Body).Decode(&metricRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := metricRequest.MType.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusNotImplemented)
+		return
+	}
+
+	metric, err := h.Server.LoadMetric(r.Context(), metricRequest.MType, metricRequest.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if metric == nil {
+		http.Error(w, fmt.Sprintf("Metric %s not found", metricRequest.ID), http.StatusNotFound)
+		return
+	}
+
+	data, err := json.Marshal(metric)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, string(data))
 }
 
 func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +118,7 @@ func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {
 		<title>{{.Title}}</title>
 	</head>
 	<body>
-		{{range .Metrics}}<div>{{ .Name }}: {{ .StringValue }}</div>{{end}}
+		{{range .Metrics}}<div>{{ .ID }}: {{ .String }}</div>{{end}}
 	</body>
 	</html>`
 
