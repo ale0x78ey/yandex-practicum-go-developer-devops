@@ -4,8 +4,9 @@ import (
 	"errors"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimw "github.com/go-chi/chi/v5/middleware"
 
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/middleware"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 )
 
@@ -26,17 +27,19 @@ func NewHandler(srv *server.Server) (*Handler, error) {
 		Router: router,
 	}
 
-	h.Router.Use(middleware.Recoverer)
+	h.Router.Use(chimw.Recoverer)
+	h.Router.Use(middleware.GzipDecoder())
+	h.Router.Use(middleware.GzipEncoder())
 
 	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}", func(r chi.Router) {
-		r.Use(withMTypeValidator)
+		r.Use(middleware.MetricTypeValidator)
 		r.Post("/", h.updateMetricWithURL)
 	})
 
 	h.Router.Post("/update/", h.updateMetricWithBody)
 
 	h.Router.Route("/value/{metricType}/{metricName}", func(r chi.Router) {
-		r.Use(withMTypeValidator)
+		r.Use(middleware.MetricTypeValidator)
 		r.Get("/", h.getMetricWithURL)
 	})
 

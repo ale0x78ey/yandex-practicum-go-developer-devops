@@ -1,4 +1,4 @@
-package rest
+package middleware
 
 import (
 	"net/http"
@@ -7,9 +7,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/pkg/testutils"
 )
 
-func TestWithMTypeValidator(t *testing.T) {
+func TestMetricTypeValidator(t *testing.T) {
 	type want struct {
 		code int
 	}
@@ -44,7 +46,7 @@ func TestWithMTypeValidator(t *testing.T) {
 	r := chi.NewRouter()
 
 	r.Route("/smth/{metricType}", func(r chi.Router) {
-		r.Use(withMTypeValidator)
+		r.Use(MetricTypeValidator)
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		})
@@ -55,7 +57,7 @@ func TestWithMTypeValidator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode, _ := doRequest(t, server, http.MethodGet, tt.path, nil)
+			statusCode, _ := testutils.DoRequest(t, server, http.MethodGet, tt.path, nil)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}

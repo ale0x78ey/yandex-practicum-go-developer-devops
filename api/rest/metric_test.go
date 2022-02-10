@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/pkg/testutils"
 	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
 )
 
@@ -63,7 +64,7 @@ func TestUpdateMetricWithURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode, _ := doRequest(t, server, http.MethodPost, tt.path, nil)
+			statusCode, _ := testutils.DoRequest(t, server, http.MethodPost, tt.path, nil)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
@@ -124,7 +125,7 @@ func TestUpdateMetricWithBody(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data, err := json.Marshal(tt.metric)
 			require.NoError(t, err)
-			statusCode, _ := doRequest(t, server, http.MethodPost, tt.path, &data)
+			statusCode, _ := testutils.DoRequest(t, server, http.MethodPost, tt.path, &data)
 			assert.Equal(t, tt.want.code, statusCode)
 		})
 	}
@@ -192,7 +193,7 @@ func TestGetMetricWithURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			statusCode, body := doRequest(t, server, http.MethodGet, tt.path, nil)
+			statusCode, body := testutils.DoRequest(t, server, http.MethodGet, tt.path, nil)
 			assert.Equal(t, tt.want.code, statusCode)
 			assert.Equal(t, tt.want.body, body)
 		})
@@ -267,7 +268,7 @@ func TestGetMetricWithBody(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data, err := json.Marshal(tt.metric)
 			require.NoError(t, err)
-			statusCode, body := doRequest(t, server, http.MethodPost, tt.path, &data)
+			statusCode, body := testutils.DoRequest(t, server, http.MethodPost, tt.path, &data)
 			assert.Equal(t, tt.want.code, statusCode)
 			assert.Equal(t, tt.want.body, body)
 		})
