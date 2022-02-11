@@ -2,21 +2,15 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
+	"net/http"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/caarlos0/env/v6"
-)
-
-const (
-	defaultShutdownTimeout = 3 * time.Second
-	defaultServerAddress   = "127.0.0.1:8080"
-	defaultInitStore       = true
-	defaultStoreInterval   = 300 * time.Second
-	defaultStoreFile       = "/tmp/devops-metrics-db.json"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
+	storagefile "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
 )
 
 func main() {
@@ -28,26 +22,40 @@ func main() {
 	)
 	defer stop()
 
-	config := restServerConfig{
-		ShutdownTimeout: defaultShutdownTimeout,
+	cfg := config.LoadServerConfig()
+	metricStorage, err := storagefile.NewMetricStorage(
+		cfg.StoreFile.StoreFile,
+		cfg.StoreFile.InitStore,
+	)
+	if err != nil {
+		log.Fatalf("Failed to create metric storage: %v", err)
 	}
 
-	flag.StringVar(&config.ServerAddress, "a", defaultServerAddress, "ADDRESS")
-	flag.BoolVar(&config.InitStore, "r", defaultInitStore, "RESTORE")
-	flag.DurationVar(&config.StoreInterval, "i", defaultStoreInterval, "STORE_INTERVAL")
-	flag.StringVar(&config.StoreFile, "f", defaultStoreFile, "STORE_FILE")
-	flag.Parse()
-
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("Failed to parse REST server config options: %v", err)
-	}
-
-	server, err := newRestServer(config)
+	s, err := server.NewServer(cfg.Server, metricStorage)
 	if err != nil {
 		log.Fatalf("Failed to create a server: %v", err)
 	}
 
-	if err := server.Run(ctx); err != nil {
-		log.Fatalf("Failed to run a server: %v", err)
+	h, err := rest.NewHandler(cfg, s)
+	if err != nil {
+		log.Fatalf("Failed to create a handler: %v", err)
+	}
+
+	httpServer := &http.Server{
+		Addr:    cfg.Http.ServerAddress,
+		Handler: h.Router,
+	}
+
+	go func() {
+		if err := s.Run(ctx); err != nil {
+			log.Fatalf("Failed to run a server: %v", err)
+		}
+		if err := httpServer.Shutdown(ctx); err != nil {
+			log.Fatalf("HTTP Server failed: %v", err)
+		}
+	}()
+
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
 }

@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/pkg"
 )
 
 type (
@@ -11,6 +13,7 @@ type (
 		MType MetricType `json:"type"`
 		Delta *Counter   `json:"delta,omitempty"`
 		Value *Gauge     `json:"value,omitempty"`
+		Hash  string     `json:"hash,omitempty"`
 	}
 
 	MetricType string
@@ -79,6 +82,17 @@ func (m Metric) String() string {
 		return m.Delta.String()
 	default:
 		return ""
+	}
+}
+
+func (m Metric) ProcessHash(key string) (string, error) {
+	switch m.MType {
+	case MetricTypeGauge:
+		return pkg.Hash([]byte(fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Value)), []byte(key))
+	case MetricTypeCounter:
+		return pkg.Hash([]byte(fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Delta)), []byte(key))
+	default:
+		return "", fmt.Errorf("unkown MType: %s", m.MType)
 	}
 }
 

@@ -6,16 +6,21 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/middleware"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 )
 
 type Handler struct {
+	Config *config.Config
 	Server *server.Server
 	Router *chi.Mux
 }
 
-func NewHandler(srv *server.Server) (*Handler, error) {
+func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
+	if cfg == nil {
+		return nil, errors.New("invalid cfg value: nil")
+	}
 	if srv == nil {
 		return nil, errors.New("invalid srv value: nil")
 	}
@@ -23,6 +28,7 @@ func NewHandler(srv *server.Server) (*Handler, error) {
 	router := chi.NewRouter()
 
 	h := &Handler{
+		Config: cfg,
 		Server: srv,
 		Router: router,
 	}

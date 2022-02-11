@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -16,19 +17,25 @@ import (
 )
 
 const (
-	updateURLFormat = "http://%s/update/"
+	DefaultMaxIdleConns        = 15
+	DefaultMaxIdleConnsPerHost = 15
+	DefaultRetryCount          = 1
+	DefaultRetryWaitTime       = 100 * time.Millisecond
+	DefaultRetryMaxWaitTime    = 900 * time.Millisecond
+	DefaultPollInterval        = 02 * time.Second
+	DefaultReportInterval      = 10 * time.Second
 )
 
 type Config struct {
 	PollInterval        time.Duration `env:"POLL_INTERVAL"`
 	ReportInterval      time.Duration `env:"REPORT_INTERVAL"`
 	PostTimeout         time.Duration
-	ServerAddress       string `env:"ADDRESS"`
 	MaxIdleConns        int
 	MaxIdleConnsPerHost int
 	RetryCount          int
 	RetryWaitTime       time.Duration
 	RetryMaxWaitTime    time.Duration
+	Key                 string `env:"KEY"`
 }
 
 type metrics struct {
@@ -38,14 +45,17 @@ type metrics struct {
 }
 
 type Agent struct {
-	config    Config
+	config    *Config
 	client    *resty.Client
 	data      metrics
 	wg        sync.WaitGroup
 	updateURL string
 }
 
-func NewAgent(config Config) (*Agent, error) {
+func NewAgent(config *Config, updateURL string) (*Agent, error) {
+	if config == nil {
+		return nil, errors.New("invalid config value: nil")
+	}
 	if config.PostTimeout <= 0 {
 		config.PostTimeout = minDuration(config.ReportInterval, config.PollInterval)
 	}
@@ -67,7 +77,7 @@ func NewAgent(config Config) (*Agent, error) {
 	a := &Agent{
 		config:    config,
 		client:    client,
-		updateURL: fmt.Sprintf(updateURLFormat, config.ServerAddress),
+		updateURL: updateURL,
 	}
 
 	return a, nil
@@ -150,6 +160,15 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
+
+		if a.config.Key != "" {
+			if hash, err := metric.ProcessHash(a.config.Key); err == nil {
+				metric.Hash = hash
+			} else {
+				return
+			}
+		}
+
 		if data, err := json.Marshal(metric); err == nil {
 			request := a.client.R().
 				SetContext(ctx).
