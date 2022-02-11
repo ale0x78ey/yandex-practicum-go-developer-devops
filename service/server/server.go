@@ -43,7 +43,7 @@ func NewServer(config *Config, metricStorage storage.MetricStorage) (*Server, er
 	return srv, nil
 }
 
-func (s *Server) ValidateMetricHash(metric model.Metric) (bool, error) {
+func (s *Server) validateMetricHash(metric model.Metric) (bool, error) {
 	if s.config.Key != "" {
 		hash, err := metric.ProcessHash(s.config.Key)
 		if err != nil {
@@ -57,6 +57,14 @@ func (s *Server) ValidateMetricHash(metric model.Metric) (bool, error) {
 }
 
 func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
+	v, err := s.validateMetricHash(metric)
+	if err != nil {
+		return nil
+	}
+	if !v {
+		return errors.New("invalid hash")
+	}
+
 	switch metric.MType {
 	case model.MetricTypeGauge:
 		return s.MetricStorage.SaveMetric(ctx, metric)

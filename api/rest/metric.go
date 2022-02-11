@@ -47,17 +47,6 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, err := h.Server.ValidateMetricHash(metric)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if !valid {
-		http.Error(w, "invalid hash value", http.StatusBadRequest)
-		return
-	}
-
 	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -95,17 +84,6 @@ func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {
 
 	if err := metricRequest.MType.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusNotImplemented)
-		return
-	}
-
-	valid, err := h.Server.ValidateMetricHash(metricRequest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if !valid {
-		http.Error(w, "invalid hash value", http.StatusBadRequest)
 		return
 	}
 
