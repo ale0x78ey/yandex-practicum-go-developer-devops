@@ -172,7 +172,7 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 		if data, err := json.Marshal(metric); err == nil {
 			request := a.client.R().
 				SetContext(ctx).
-				SetHeader("content-type", "application/json").
+				SetHeader("Content-Type", "application/json").
 				SetBody(data)
 
 			request.Post(a.updateURL)

@@ -70,7 +70,7 @@ func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "text/plain")
+	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, metric.String())
 }
@@ -104,7 +104,7 @@ func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, string(data))
 }
@@ -144,7 +144,7 @@ func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {
 		Metrics: metrics,
 	}
 
-	w.Header().Set("content-type", "text/html")
+	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	_ = t.Execute(w, data)
 }
