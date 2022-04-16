@@ -26,7 +26,7 @@ func TestNewHandler(t *testing.T) {
 }
 
 func newTestHandler(t *testing.T, metricStorage storage.MetricStorage) *Handler {
-	srv, err := server.NewServer(&server.Config{}, metricStorage)
+	srv, err := server.NewServer(server.Config{}, metricStorage)
 	require.NoError(t, err)
 
 	h, err := NewHandler(&config.Config{}, srv)
