@@ -31,8 +31,12 @@ func main() {
 	defer stop()
 
 	cfg := config.LoadAgentConfig()
+	if cfg.Agent == nil {
+		log.Fatalf("Missing config for agent")
+	}
 
-	agent, err := agent.NewAgent(cfg.Agent, fmt.Sprintf(updateURLFormat, cfg.Http.ServerAddress))
+	agent, err := agent.NewAgent(*cfg.Agent,
+		fmt.Sprintf(updateURLFormat, cfg.Http.ServerAddress))
 	if err != nil {
 		log.Fatalf("Failed to create an agent: %v", err)
 	}

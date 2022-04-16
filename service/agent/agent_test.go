@@ -10,12 +10,6 @@ import (
 )
 
 func TestNewAgent(t *testing.T) {
-	agent, err := NewAgent(&Config{}, "")
-	assert.Nil(t, err)
-	assert.NotNil(t, agent)
-}
-
-func TestRun(t *testing.T) {
 	tests := []struct {
 		name           string
 		pollInterval   time.Duration
@@ -44,7 +38,38 @@ func TestRun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a, err := NewAgent(&Config{
+			_, err := NewAgent(Config{
+				PollInterval:   tt.pollInterval,
+				ReportInterval: tt.reportInterval,
+			}, "")
+
+			if !tt.wantErr {
+				require.NoError(t, err)
+				return
+			}
+			assert.Error(t, err)
+		})
+	}
+}
+
+func TestRun(t *testing.T) {
+	tests := []struct {
+		name           string
+		pollInterval   time.Duration
+		reportInterval time.Duration
+		wantErr        bool
+	}{
+		{
+			name:           "positive PollInterval and ReportInterval",
+			pollInterval:   1 * time.Second,
+			reportInterval: 1,
+			wantErr:        false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a, err := NewAgent(Config{
 				PollInterval:   tt.pollInterval,
 				ReportInterval: tt.reportInterval,
 			}, "")

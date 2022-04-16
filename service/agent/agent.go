@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -38,6 +37,20 @@ type Config struct {
 	Key                 string `env:"KEY"`
 }
 
+func (c Config) Validate() error {
+	if c.PollInterval <= 0 {
+		return fmt.Errorf("invalid non-positive PollInterval=%v", c.PollInterval)
+	}
+	if c.ReportInterval <= 0 {
+		return fmt.Errorf("invalid non-positive ReportInterval=%v", c.ReportInterval)
+	}
+	if c.PostTimeout <= 0 {
+		c.PostTimeout = minDuration(c.ReportInterval, c.PollInterval)
+	}
+
+	return nil
+}
+
 type metrics struct {
 	memStats    runtime.MemStats
 	randomValue float64
@@ -45,19 +58,16 @@ type metrics struct {
 }
 
 type Agent struct {
-	config    *Config
+	config    Config
 	client    *resty.Client
 	data      metrics
 	wg        sync.WaitGroup
 	updateURL string
 }
 
-func NewAgent(config *Config, updateURL string) (*Agent, error) {
-	if config == nil {
-		return nil, errors.New("invalid config value: nil")
-	}
-	if config.PostTimeout <= 0 {
-		config.PostTimeout = minDuration(config.ReportInterval, config.PollInterval)
+func NewAgent(config Config, updateURL string) (*Agent, error) {
+	if err := config.Validate(); err != nil {
+		return nil, err
 	}
 
 	t := &http.Transport{}
@@ -84,15 +94,6 @@ func NewAgent(config *Config, updateURL string) (*Agent, error) {
 }
 
 func (a *Agent) Run(ctx context.Context) error {
-	if a.config.PollInterval <= 0 {
-		return fmt.Errorf("invalid non-positive PollInterval=%v",
-			a.config.PollInterval)
-	}
-	if a.config.ReportInterval <= 0 {
-		return fmt.Errorf("invalid non-positive ReportInterval=%v",
-			a.config.ReportInterval)
-	}
-
 	pollTicker := time.NewTicker(a.config.PollInterval)
 	defer pollTicker.Stop()
 
