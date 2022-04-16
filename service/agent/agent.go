@@ -28,7 +28,6 @@ const (
 type Config struct {
 	PollInterval        time.Duration `env:"POLL_INTERVAL"`
 	ReportInterval      time.Duration `env:"REPORT_INTERVAL"`
-	PostTimeout         time.Duration
 	MaxIdleConns        int
 	MaxIdleConnsPerHost int
 	RetryCount          int
@@ -43,9 +42,6 @@ func (c Config) Validate() error {
 	}
 	if c.ReportInterval <= 0 {
 		return fmt.Errorf("invalid non-positive ReportInterval=%v", c.ReportInterval)
-	}
-	if c.PostTimeout <= 0 {
-		c.PostTimeout = minDuration(c.ReportInterval, c.PollInterval)
 	}
 
 	return nil
@@ -119,7 +115,8 @@ func (a *Agent) pollMetrics() {
 }
 
 func (a *Agent) postMetrics(ctx context.Context) {
-	ctx, cancel := context.WithTimeout(ctx, a.config.PostTimeout)
+	postTimeout := minDuration(a.config.ReportInterval, a.config.PollInterval)
+	ctx, cancel := context.WithTimeout(ctx, postTimeout)
 	defer cancel()
 
 	m := &a.data.memStats
