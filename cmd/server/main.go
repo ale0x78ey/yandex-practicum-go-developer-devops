@@ -23,6 +23,9 @@ func main() {
 	defer stop()
 
 	cfg := config.LoadServerConfig()
+	if cfg.StoreFile == nil {
+		log.Fatalf("Missing config for storing in file")
+	}
 	metricStorage, err := storagefile.NewMetricStorage(
 		cfg.StoreFile.StoreFile,
 		cfg.StoreFile.InitStore,
@@ -31,7 +34,10 @@ func main() {
 		log.Fatalf("Failed to create metric storage: %v", err)
 	}
 
-	s, err := server.NewServer(cfg.Server, metricStorage)
+	if cfg.Server == nil {
+		log.Fatalf("Missing config for server")
+	}
+	s, err := server.NewServer(*cfg.Server, metricStorage)
 	if err != nil {
 		log.Fatalf("Failed to create a server: %v", err)
 	}

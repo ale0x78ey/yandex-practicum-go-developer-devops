@@ -13,14 +13,11 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	cfg := &Config{}
+	cfg := Config{}
 	_, err := NewServer(cfg, nil)
 	assert.NotNil(t, err)
 
 	metricStorage := storagemock.NewMockMetricStorage(nil)
-	_, err = NewServer(nil, metricStorage)
-	assert.NotNil(t, err)
-
 	srv, err := NewServer(cfg, metricStorage)
 	assert.Nil(t, err)
 	assert.NotNil(t, srv)
@@ -54,7 +51,7 @@ func TestServer_PushMetric(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	cfg := &Config{}
+	cfg := Config{}
 	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
 	srv, err := NewServer(cfg, metricStorage)
 	assert.Nil(t, err)

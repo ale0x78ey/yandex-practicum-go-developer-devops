@@ -24,13 +24,10 @@ type Config struct {
 
 type Server struct {
 	storage.MetricStorage
-	config *Config
+	config Config
 }
 
-func NewServer(config *Config, metricStorage storage.MetricStorage) (*Server, error) {
-	if config == nil {
-		return nil, errors.New("invalid config value: nil")
-	}
+func NewServer(config Config, metricStorage storage.MetricStorage) (*Server, error) {
 	if metricStorage == nil {
 		return nil, errors.New("invalid metricStorage value: nil")
 	}
