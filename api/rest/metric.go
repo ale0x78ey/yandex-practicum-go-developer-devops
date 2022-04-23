@@ -52,8 +52,15 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data, err := json.Marshal(struct{}{})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, string(data))
 }
 
 func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
