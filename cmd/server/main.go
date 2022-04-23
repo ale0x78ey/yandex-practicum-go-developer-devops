@@ -22,6 +22,7 @@ func NewMetricStorager(cfg *config.Config) (storage.MetricStorage, error) {
 	}
 
 	if cfg.DB != nil && cfg.DB.DSN != "" {
+		panic("!!!!!!!!!!")
 		return db.NewMetricStorage(*cfg.DB)
 	}
 
