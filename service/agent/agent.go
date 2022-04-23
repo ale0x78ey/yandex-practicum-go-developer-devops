@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -167,13 +166,11 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 			}
 		}
 
-		if data, err := json.Marshal(metric); err == nil {
-			request := a.client.R().
-				SetContext(ctx).
-				SetHeader("Content-Type", "application/json").
-				SetBody(data)
-
-			request.Post(a.updateURL)
+		_, err := a.client.R().
+			SetContext(ctx).
+			SetBody(metric).
+			Post(a.updateURL)
+		if err != nil {
 		}
 	}()
 }
