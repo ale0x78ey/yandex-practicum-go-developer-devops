@@ -116,3 +116,10 @@ func (s *MetricStorage) Flush(ctx context.Context) error {
 
 	return nil
 }
+
+func (s *MetricStorage) Close() {
+}
+
+func (s *MetricStorage) Validate(ctx context.Context) error {
+	return nil
+}

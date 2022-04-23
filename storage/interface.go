@@ -21,4 +21,7 @@ type MetricStorage interface {
 	LoadMetricList(ctx context.Context) ([]model.Metric, error)
 
 	Flush(ctx context.Context) error
+	Close()
+
+	Validate(ctx context.Context) error
 }

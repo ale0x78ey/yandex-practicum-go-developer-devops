@@ -53,5 +53,7 @@ func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
 
 	h.Router.Get("/", h.getMetricList)
 
+	h.Router.Get("/ping", h.getStorageStatus)
+
 	return h, nil
 }
