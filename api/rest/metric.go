@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -31,6 +32,11 @@ func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	var metric model.Metric
 	if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,6 +58,7 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
