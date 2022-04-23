@@ -35,6 +35,18 @@ func (m *MockMetricStorage) EXPECT() *MockMetricStorageMockRecorder {
 	return m.recorder
 }
 
+// Close mocks base method.
+func (m *MockMetricStorage) Close() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Close")
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockMetricStorageMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockMetricStorage)(nil).Close))
+}
+
 // Flush mocks base method.
 func (m *MockMetricStorage) Flush(ctx context.Context) error {
 	m.ctrl.T.Helper()
@@ -105,4 +117,18 @@ func (m *MockMetricStorage) SaveMetric(ctx context.Context, metric model.Metric)
 func (mr *MockMetricStorageMockRecorder) SaveMetric(ctx, metric interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetric", reflect.TypeOf((*MockMetricStorage)(nil).SaveMetric), ctx, metric)
+}
+
+// Validate mocks base method.
+func (m *MockMetricStorage) Validate(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Validate", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Validate indicates an expected call of Validate.
+func (mr *MockMetricStorageMockRecorder) Validate(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockMetricStorage)(nil).Validate), ctx)
 }
