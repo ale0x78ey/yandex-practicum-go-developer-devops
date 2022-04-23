@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:14.2
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-d", "${POSTGRES_DB:-db}", "-U",
+              "${POSTGRES_USER:-user}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    environment:
+      - "POSTGRES_DB=${POSTGRES_DB:-db}"
+      - "POSTGRES_USER=${POSTGRES_USER:-user}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pass}"

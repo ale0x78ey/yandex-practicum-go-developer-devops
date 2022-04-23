@@ -2,6 +2,8 @@ package config
 
 import (
 	"flag"
+
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
 )
 
 const (
@@ -9,13 +11,8 @@ const (
 	DefaultStoreFile = "/tmp/devops-metrics-db.json"
 )
 
-type StoreFileConfig struct {
-	InitStore bool   `env:"RESTORE"`
-	StoreFile string `env:"STORE_FILE"`
-}
-
-func NewStoreFileConfig() *StoreFileConfig {
-	cfg := StoreFileConfig{}
+func NewStoreFileConfig() *file.Config {
+	cfg := file.Config{}
 	flag.BoolVar(&cfg.InitStore, "r", DefaultInitStore, "RESTORE")
 	flag.StringVar(&cfg.StoreFile, "f", DefaultStoreFile, "STORE_FILE")
 	return &cfg

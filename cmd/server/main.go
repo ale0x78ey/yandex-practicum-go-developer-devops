@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os/signal"
@@ -10,8 +11,22 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
-	storagefile "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/db"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
 )
+
+func NewMetricStorager(cfg config.Config) (storage.MetricStorage, error) {
+	if cfg.DB != nil && cfg.DB.DSN != "" {
+		return db.NewMetricStorage(*cfg.DB)
+	}
+
+	if cfg.StoreFile != nil && cfg.StoreFile.StoreFile != "" {
+		return file.NewMetricStorage(*cfg.StoreFile)
+	}
+
+	return nil, errors.New("missing config options for a metric storager")
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(
@@ -23,15 +38,9 @@ func main() {
 	defer stop()
 
 	cfg := config.LoadServerConfig()
-	if cfg.StoreFile == nil {
-		log.Fatalf("Missing config for storing in file")
-	}
-	metricStorage, err := storagefile.NewMetricStorage(
-		cfg.StoreFile.StoreFile,
-		cfg.StoreFile.InitStore,
-	)
+	metricStorage, err := NewMetricStorager(*cfg)
 	if err != nil {
-		log.Fatalf("Failed to create metric storage: %v", err)
+		log.Fatalf("Failed to create a metric storage: %v", err)
 	}
 
 	if cfg.Server == nil {

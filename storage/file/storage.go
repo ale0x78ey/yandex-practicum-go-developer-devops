@@ -1,4 +1,4 @@
-package storagefile
+package file
 
 import (
 	"context"
@@ -11,21 +11,26 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
+type Config struct {
+	InitStore bool   `env:"RESTORE"`
+	StoreFile string `env:"STORE_FILE"`
+}
+
 type MetricStorage struct {
 	sync.RWMutex
 
-	storeFile string
-	metrics   map[string]model.Metric
+	config  Config
+	metrics map[string]model.Metric
 }
 
-func NewMetricStorage(storeFile string, initStore bool) (*MetricStorage, error) {
+func NewMetricStorage(config Config) (*MetricStorage, error) {
 	storage := &MetricStorage{
-		storeFile: storeFile,
-		metrics:   make(map[string]model.Metric),
+		config:  config,
+		metrics: make(map[string]model.Metric),
 	}
 
-	if initStore {
-		file, err := os.OpenFile(storeFile, os.O_RDONLY|os.O_CREATE, 0644)
+	if config.InitStore {
+		file, err := os.OpenFile(config.StoreFile, os.O_RDONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return nil, err
 		}
@@ -96,7 +101,7 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 }
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
-	file, err := os.OpenFile(s.storeFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(s.config.StoreFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}

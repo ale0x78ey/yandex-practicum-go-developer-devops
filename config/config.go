@@ -8,13 +8,16 @@ import (
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/agent"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/db"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
 )
 
 type Config struct {
 	Http      *HttpConfig
 	Server    *server.Config
-	StoreFile *StoreFileConfig
+	StoreFile *file.Config
 	Agent     *agent.Config
+	DB        *db.Config
 }
 
 func LoadAgentConfig() *Config {
@@ -41,6 +44,7 @@ func LoadServerConfig() *Config {
 		Http:      NewHttpConfig(),
 		Server:    NewServerConfig(),
 		StoreFile: NewStoreFileConfig(),
+		DB:        NewDBConfig(),
 	}
 
 	flag.Parse()
@@ -55,6 +59,10 @@ func LoadServerConfig() *Config {
 
 	if err := env.Parse(conf.StoreFile); err != nil {
 		log.Fatalf("Failed to parse store file config options: %v", err)
+	}
+
+	if err := env.Parse(conf.DB); err != nil {
+		log.Fatalf("Failed to parse DB config options: %v", err)
 	}
 
 	return conf
