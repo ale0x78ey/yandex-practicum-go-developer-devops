@@ -32,11 +32,6 @@ func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
-		http.Error(w, "Content-Type is not application/json", http.StatusBadRequest)
-		return
-	}
-
 	var metric model.Metric
 	if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
