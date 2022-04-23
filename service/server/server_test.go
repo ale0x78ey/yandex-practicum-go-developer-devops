@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,9 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	cfg := Config{}
+	cfg := Config{
+		StoreInterval: 1*time.Second,
+	}
 	_, err := NewServer(cfg, nil)
 	assert.NotNil(t, err)
 
@@ -51,7 +54,9 @@ func TestServer_PushMetric(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 
-	cfg := Config{}
+	cfg := Config{
+		StoreInterval: 1*time.Second,
+	}
 	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
 	srv, err := NewServer(cfg, metricStorage)
 	assert.Nil(t, err)

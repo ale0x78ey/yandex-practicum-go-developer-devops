@@ -2,6 +2,7 @@ package rest
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,10 +27,14 @@ func TestNewHandler(t *testing.T) {
 }
 
 func newTestHandler(t *testing.T, metricStorage storage.MetricStorage) *Handler {
-	srv, err := server.NewServer(server.Config{}, metricStorage)
+	srvConfig := server.Config{
+		StoreInterval: 1*time.Second,
+	}
+	srv, err := server.NewServer(srvConfig, metricStorage)
 	require.NoError(t, err)
 
-	h, err := NewHandler(&config.Config{}, srv)
+	hConfig := &config.Config{}
+	h, err := NewHandler(hConfig, srv)
 	require.NoError(t, err)
 
 	return h
