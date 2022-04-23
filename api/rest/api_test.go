@@ -28,7 +28,7 @@ func TestNewHandler(t *testing.T) {
 
 func newTestHandler(t *testing.T, metricStorage storage.MetricStorage) *Handler {
 	srvConfig := server.Config{
-		StoreInterval: 1*time.Second,
+		StoreInterval: 1 * time.Second,
 	}
 	srv, err := server.NewServer(srvConfig, metricStorage)
 	require.NoError(t, err)

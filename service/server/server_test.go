@@ -15,7 +15,7 @@ import (
 
 func TestNewServer(t *testing.T) {
 	cfg := Config{
-		StoreInterval: 1*time.Second,
+		StoreInterval: 1 * time.Second,
 	}
 	_, err := NewServer(cfg, nil)
 	assert.NotNil(t, err)
@@ -55,7 +55,7 @@ func TestServer_PushMetric(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	cfg := Config{
-		StoreInterval: 1*time.Second,
+		StoreInterval: 1 * time.Second,
 	}
 	metricStorage := storagemock.NewMockMetricStorage(mockCtrl)
 	srv, err := NewServer(cfg, metricStorage)

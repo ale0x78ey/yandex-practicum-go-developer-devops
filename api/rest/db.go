@@ -7,7 +7,7 @@ import (
 )
 
 func (h *Handler) getStorageStatus(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 100*time.Millisecond)
 	defer cancel()
 	if err := h.Server.Validate(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
