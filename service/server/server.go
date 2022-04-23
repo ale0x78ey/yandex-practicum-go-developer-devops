@@ -22,6 +22,13 @@ type Config struct {
 	Key             string        `env:"KEY"`
 }
 
+func (c Config) Validate() error {
+	if c.StoreInterval <= 0 {
+		return fmt.Errorf("invalid non-positive StoreInterval=%v", c.StoreInterval)
+	}
+	return nil
+}
+
 type Server struct {
 	storage.MetricStorage
 	config Config
@@ -30,6 +37,10 @@ type Server struct {
 func NewServer(config Config, metricStorage storage.MetricStorage) (*Server, error) {
 	if metricStorage == nil {
 		return nil, errors.New("invalid metricStorage value: nil")
+	}
+
+	if err := config.Validate(); err != nil {
+		return nil, err
 	}
 
 	srv := &Server{
@@ -110,10 +121,6 @@ func (s *Server) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
 }
 
 func (s *Server) Run(ctx context.Context) error {
-	if s.config.StoreInterval <= 0 {
-		return fmt.Errorf("invalid non-positive StoreInterval=%v", s.config.StoreInterval)
-	}
-
 	storeTicker := time.NewTicker(s.config.StoreInterval)
 	defer storeTicker.Stop()
 
