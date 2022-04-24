@@ -1,0 +1,1 @@
+DROP INDEX counter_metrics_created_at_desc_index;

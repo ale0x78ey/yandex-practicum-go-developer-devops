@@ -2,15 +2,19 @@ package db
 
 import (
 	"context"
-
 	"database/sql"
-	_ "github.com/jackc/pgx/stdlib"
+	"errors"
+
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/pgx"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
 
 type Config struct {
-	DSN string `env:"DATABASE_DSN"`
+	DSN           string `env:"DATABASE_DSN"`
+	MigrationsURL string
 }
 
 type MetricStorage struct {
@@ -29,7 +33,34 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 		db:     db,
 	}
 
+	if err := storage.Migrate(); err != nil {
+		return nil, err
+	}
+
 	return storage, nil
+}
+
+func (s *MetricStorage) Migrate() error {
+	if s.db == nil {
+		return errors.New("database connection is not opened")
+	}
+
+	cfg := &pgx.Config{}
+	driver, err := pgx.WithInstance(s.db, cfg)
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(s.config.MigrationsURL, cfg.DatabaseName, driver)
+	if err != nil {
+		return err
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	return nil
 }
 
 func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) error {
