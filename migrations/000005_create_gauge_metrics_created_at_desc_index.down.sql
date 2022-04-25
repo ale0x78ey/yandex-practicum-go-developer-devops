@@ -1,1 +1,0 @@
-DROP INDEX gauge_metrics_created_at_desc_index;

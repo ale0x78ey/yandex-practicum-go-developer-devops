@@ -16,13 +16,13 @@ import (
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
 )
 
-func NewMetricStorager(cfg *config.Config) (storage.MetricStorage, error) {
+func NewMetricStorager(ctx context.Context, cfg *config.Config) (storage.MetricStorage, error) {
 	if cfg == nil {
 		return nil, errors.New("invalid cfg value: nil")
 	}
 
 	if cfg.DB != nil && cfg.DB.DSN != "" {
-		return db.NewMetricStorage(*cfg.DB)
+		return db.NewMetricStorage(ctx, *cfg.DB)
 	}
 
 	if cfg.StoreFile != nil && cfg.StoreFile.StoreFile != "" {
@@ -42,7 +42,7 @@ func main() {
 	defer stop()
 
 	cfg := config.LoadServerConfig()
-	metricStorage, err := NewMetricStorager(cfg)
+	metricStorage, err := NewMetricStorager(ctx, cfg)
 	if err != nil {
 		log.Fatalf("Failed to create a metric storage: %v", err)
 	}

@@ -17,7 +17,6 @@ type MetricStorage interface {
 		metricName string,
 	) (*model.Metric, error)
 
-	// TODO: Add offset, limit.
 	LoadMetricList(ctx context.Context) ([]model.Metric, error)
 
 	Flush(ctx context.Context) error
