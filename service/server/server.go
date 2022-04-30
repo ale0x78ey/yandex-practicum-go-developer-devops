@@ -67,7 +67,7 @@ func (s *Server) validateMetricHash(metric model.Metric) (bool, error) {
 func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
 	v, err := s.validateMetricHash(metric)
 	if err != nil {
-		return nil
+		return err
 	}
 	if !v {
 		return errors.New("invalid hash")
