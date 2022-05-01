@@ -9,7 +9,7 @@ import (
 
 func TestMetric_MetricFromGauge(t *testing.T) {
 	type want struct {
-		ID          string
+		ID          MetricName
 		MType       MetricType
 		Value       Gauge
 		StringValue string
@@ -25,7 +25,7 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 			metricName:  "metric1",
 			metricValue: Gauge(1.05),
 			want: want{
-				ID:          "metric1",
+				ID:          MetricName("metric1"),
 				MType:       MetricTypeGauge,
 				Value:       Gauge(1.05),
 				StringValue: "1.05",
@@ -36,7 +36,7 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 			metricName:  "metric2",
 			metricValue: Gauge(2),
 			want: want{
-				ID:          "metric2",
+				ID:          MetricName("metric2"),
 				MType:       MetricTypeGauge,
 				Value:       Gauge(2),
 				StringValue: "2",
@@ -57,7 +57,7 @@ func TestMetric_MetricFromGauge(t *testing.T) {
 
 func TestMetric_MetricFromCounter(t *testing.T) {
 	type want struct {
-		ID          string
+		ID          MetricName
 		MType       MetricType
 		Delta       Counter
 		StringValue string
@@ -73,7 +73,7 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 			metricName:  "metric1",
 			metricValue: Counter(1),
 			want: want{
-				ID:          "metric1",
+				ID:          MetricName("metric1"),
 				MType:       MetricTypeCounter,
 				Delta:       Counter(1),
 				StringValue: "1",
@@ -84,7 +84,7 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 			metricName:  "metric2",
 			metricValue: Counter(2),
 			want: want{
-				ID:          "metric2",
+				ID:          MetricName("metric2"),
 				MType:       MetricTypeCounter,
 				Delta:       Counter(2),
 				StringValue: "2",
@@ -105,7 +105,7 @@ func TestMetric_MetricFromCounter(t *testing.T) {
 
 func TestMetric_MetricFromString(t *testing.T) {
 	type want struct {
-		ID          string
+		ID          MetricName
 		MType       MetricType
 		Value       Gauge
 		Delta       Counter
@@ -125,7 +125,7 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeGauge,
 			metricStringValue: "0",
 			want: want{
-				ID:          "metric1",
+				ID:          MetricName("metric1"),
 				MType:       MetricTypeGauge,
 				Value:       Gauge(0),
 				StringValue: "0",
@@ -138,7 +138,7 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeGauge,
 			metricStringValue: "1.0095",
 			want: want{
-				ID:          "metric2",
+				ID:          MetricName("metric2"),
 				MType:       MetricTypeGauge,
 				Value:       Gauge(1.0095),
 				StringValue: "1.0095",
@@ -151,7 +151,7 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeCounter,
 			metricStringValue: "0",
 			want: want{
-				ID:          "metric3",
+				ID:          MetricName("metric3"),
 				MType:       MetricTypeCounter,
 				Delta:       Counter(0),
 				StringValue: "0",
@@ -164,7 +164,7 @@ func TestMetric_MetricFromString(t *testing.T) {
 			metricType:        MetricTypeCounter,
 			metricStringValue: "99999999",
 			want: want{
-				ID:          "metric4",
+				ID:          MetricName("metric4"),
 				MType:       MetricTypeCounter,
 				Delta:       Counter(99999999),
 				StringValue: "99999999",

@@ -3,7 +3,6 @@ package file
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -16,17 +15,20 @@ type Config struct {
 	StoreFile string `env:"STORE_FILE"`
 }
 
+type metricsMap map[model.MetricName]model.Metric
+type metricsMapMap map[model.MetricType]metricsMap
+
 type MetricStorage struct {
 	sync.RWMutex
 
 	config  Config
-	metrics map[string]model.Metric
+	metrics metricsMapMap
 }
 
 func NewMetricStorage(config Config) (*MetricStorage, error) {
 	storage := &MetricStorage{
 		config:  config,
-		metrics: make(map[string]model.Metric),
+		metrics: make(metricsMapMap),
 	}
 
 	if config.InitStore {
@@ -44,57 +46,111 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 	return storage, nil
 }
 
+func (s *MetricStorage) saveMetric(ctx context.Context, metric model.Metric) error {
+	if err := metric.Validate(); err != nil {
+		return err
+	}
+
+	metrics, ok := s.metrics[metric.MType]
+	if !ok {
+		metrics = make(metricsMap)
+		s.metrics[metric.MType] = metrics
+	}
+
+	metrics[metric.ID] = metric
+
+	return nil
+}
+
 func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) error {
 	s.Lock()
 	defer s.Unlock()
 
-	s.metrics[metric.ID] = metric
-	return nil
+	return s.saveMetric(ctx, metric)
 }
 
 func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) error {
 	s.Lock()
 	defer s.Unlock()
 
-	if oldMetric, ok := s.metrics[metric.ID]; ok {
-		if oldMetric.MType != metric.MType {
-			return fmt.Errorf("different metric types for metric %s", metric.ID)
-		}
+	m, err := s.loadMetric(ctx, metric)
+	if err != nil {
+		return err
+	}
+
+	if m != nil {
 		if metric.Value != nil {
-			*metric.Value += *oldMetric.Value
+			*metric.Value += *m.Value
 		}
 		if metric.Delta != nil {
-			*metric.Delta += *oldMetric.Delta
+			*metric.Delta += *m.Delta
 		}
 	}
 
-	s.metrics[metric.ID] = metric
+	return s.saveMetric(ctx, metric)
 
 	return nil
 }
 
+func (s *MetricStorage) loadMetric(
+	ctx context.Context,
+	metric model.Metric,
+) (*model.Metric, error) {
+	if metrics, ok := s.metrics[metric.MType]; ok {
+		if m, ok := metrics[metric.ID]; ok {
+			return &m, nil
+		}
+	}
+
+	return nil, nil
+}
+
 func (s *MetricStorage) LoadMetric(
 	ctx context.Context,
-	metricType model.MetricType,
-	metricName string,
+	metric model.Metric,
 ) (*model.Metric, error) {
 	s.RLock()
 	defer s.RUnlock()
 
-	if metric, ok := s.metrics[metricName]; ok && metric.MType == metricType {
-		return &metric, nil
-	}
+	return s.loadMetric(ctx, metric)
+}
 
-	return nil, nil
+func (s *MetricStorage) count() int {
+	count := 0
+	for _, metrics := range s.metrics {
+		count += len(metrics)
+	}
+	return count
+}
+
+func (s *MetricStorage) SaveMetricList(ctx context.Context, metrics []model.Metric) error {
+	for _, metric := range metrics {
+		if err := s.SaveMetric(ctx, metric); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *MetricStorage) IncrMetricList(ctx context.Context, metrics []model.Metric) error {
+	for _, metric := range metrics {
+		if err := s.IncrMetric(ctx, metric); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
 	s.RLock()
 	defer s.RUnlock()
 
-	metrics := make([]model.Metric, 0, len(s.metrics))
-	for _, metric := range s.metrics {
-		metrics = append(metrics, metric)
+	metrics := make([]model.Metric, 0, s.count())
+
+	for _, metricsByMetricType := range s.metrics {
+		for _, m := range metricsByMetricType {
+			metrics = append(metrics, m)
+		}
 	}
 
 	return metrics, nil

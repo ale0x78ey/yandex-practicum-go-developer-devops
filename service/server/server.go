@@ -65,6 +65,10 @@ func (s *Server) validateMetricHash(metric model.Metric) (bool, error) {
 }
 
 func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
+	if err := metric.Validate(); err != nil {
+		return err
+	}
+
 	v, err := s.validateMetricHash(metric)
 	if err != nil {
 		return err
@@ -78,28 +82,60 @@ func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
 		return s.MetricStorage.SaveMetric(ctx, metric)
 	case model.MetricTypeCounter:
 		return s.MetricStorage.IncrMetric(ctx, metric)
-	default:
-		return fmt.Errorf("unknown metricType: %v", metric.MType)
 	}
+
+	return nil
 }
 
-func (s *Server) LoadMetric(
-	ctx context.Context,
-	metricType model.MetricType,
-	metricName string,
-) (*model.Metric, error) {
-	metric, err := s.MetricStorage.LoadMetric(ctx, metricType, metricName)
+func (s *Server) PushMetricList(ctx context.Context, metrics []model.Metric) error {
+	gaugeMetrics := make([]model.Metric, 0, len(metrics))
+	counterMetrics := make([]model.Metric, 0, len(metrics))
+
+	for _, metric := range metrics {
+		if err := metric.Validate(); err != nil {
+			return err
+		}
+
+		v, err := s.validateMetricHash(metric)
+		if err != nil {
+			return err
+		}
+		if !v {
+			return errors.New("invalid hash")
+		}
+
+		switch metric.MType {
+		case model.MetricTypeGauge:
+			gaugeMetrics = append(gaugeMetrics, metric)
+		case model.MetricTypeCounter:
+			counterMetrics = append(counterMetrics, metric)
+		}
+	}
+
+	if err := s.MetricStorage.SaveMetricList(ctx, gaugeMetrics); err != nil {
+		return err
+	}
+
+	if err := s.MetricStorage.IncrMetricList(ctx, counterMetrics); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) LoadMetric(ctx context.Context, metric model.Metric) (*model.Metric, error) {
+	m, err := s.MetricStorage.LoadMetric(ctx, metric)
 	if err != nil {
 		return nil, err
 	}
 	if s.config.Key != "" {
-		hash, err := metric.ProcessHash(s.config.Key)
+		hash, err := m.ProcessHash(s.config.Key)
 		if err != nil {
 			return nil, err
 		}
-		metric.Hash = hash
+		m.Hash = hash
 	}
-	return metric, nil
+	return m, nil
 }
 
 func (s *Server) LoadMetricList(ctx context.Context) ([]model.Metric, error) {

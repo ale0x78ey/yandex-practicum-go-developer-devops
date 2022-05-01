@@ -44,6 +44,8 @@ func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
 
 	h.Router.Post("/update/", h.updateMetricWithBody)
 
+	h.Router.Post("/updates/", h.updateMetricListWithBody)
+
 	h.Router.Route("/value/{metricType}/{metricName}", func(r chi.Router) {
 		r.Use(middleware.MetricTypeValidator)
 		r.Get("/", h.getMetricWithURL)

@@ -18,12 +18,15 @@ type Config struct {
 }
 
 type MetricStorage struct {
-	config              Config
-	db                  *sql.DB
-	gaugeSaveStmt       *sql.Stmt
-	gaugeIncrStmt       *sql.Stmt
-	gaugeLoadStmt       *sql.Stmt
-	gaugeLoadListStmt   *sql.Stmt
+	config Config
+
+	db *sql.DB
+
+	gaugeSaveStmt     *sql.Stmt
+	gaugeIncrStmt     *sql.Stmt
+	gaugeLoadStmt     *sql.Stmt
+	gaugeLoadListStmt *sql.Stmt
+
 	counterSaveStmt     *sql.Stmt
 	counterIncrStmt     *sql.Stmt
 	counterLoadStmt     *sql.Stmt
@@ -42,12 +45,12 @@ func NewMetricStorage(ctx context.Context, config Config) (*MetricStorage, error
 	}
 
 	if err := storage.Migrate(); err != nil {
-		db.Close()
+		storage.Close()
 		return nil, err
 	}
 
 	if err := storage.PrepareStatements(ctx); err != nil {
-		db.Close()
+		storage.Close()
 		return nil, err
 	}
 
@@ -77,98 +80,6 @@ func (s *MetricStorage) Migrate() error {
 	return nil
 }
 
-func (s *MetricStorage) PrepareStatements(ctx context.Context) error {
-	if s.db == nil {
-		return errors.New("database connection is not opened")
-	}
-
-	gaugeSaveStmt, err := s.db.PrepareContext(
-		ctx,
-		`
-INSERT INTO gauge_metrics (id, value)
-VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE SET value = $2`,
-	)
-	if err != nil {
-		return err
-	}
-	s.gaugeSaveStmt = gaugeSaveStmt
-
-	gaugeIncrStmt, err := s.db.PrepareContext(
-		ctx,
-		`
-INSERT INTO gauge_metrics (id, value)
-VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value + $2`,
-	)
-	if err != nil {
-		return err
-	}
-	s.gaugeIncrStmt = gaugeIncrStmt
-
-	gaugeLoadStmt, err := s.db.PrepareContext(
-		ctx,
-		"SELECT value FROM gauge_metrics WHERE id = $1",
-	)
-	if err != nil {
-		return err
-	}
-	s.gaugeLoadStmt = gaugeLoadStmt
-
-	gaugeLoadListStmt, err := s.db.PrepareContext(
-		ctx,
-		"SELECT id, value FROM gauge_metrics",
-	)
-	if err != nil {
-		return err
-	}
-	s.gaugeLoadListStmt = gaugeLoadListStmt
-
-	counterSaveStmt, err := s.db.PrepareContext(
-		ctx,
-		`
-INSERT INTO counter_metrics (id, value)
-VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE SET value = $2`,
-	)
-	if err != nil {
-		return err
-	}
-	s.counterSaveStmt = counterSaveStmt
-
-	counterIncrStmt, err := s.db.PrepareContext(
-		ctx,
-		`
-INSERT INTO counter_metrics (id, value)
-VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value + $2`,
-	)
-	if err != nil {
-		return err
-	}
-	s.counterIncrStmt = counterIncrStmt
-
-	counterLoadStmt, err := s.db.PrepareContext(
-		ctx,
-		"SELECT value FROM counter_metrics WHERE id = $1",
-	)
-	if err != nil {
-		return err
-	}
-	s.counterLoadStmt = counterLoadStmt
-
-	counterLoadListStmt, err := s.db.PrepareContext(
-		ctx,
-		"SELECT id, value FROM counter_metrics",
-	)
-	if err != nil {
-		return err
-	}
-	s.counterLoadListStmt = counterLoadListStmt
-
-	return nil
-}
-
 func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) error {
 	if s.db == nil {
 		return errors.New("database connection is not opened")
@@ -183,8 +94,9 @@ func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) err
 		if _, err := s.gaugeSaveStmt.ExecContext(ctx, metric.ID, *metric.Value); err != nil {
 			return err
 		}
+
 	case model.MetricTypeCounter:
-		if _, err := s.counterSaveStmt.ExecContext(ctx, metric.ID, *metric.Delta); err != nil {
+		if _, err := s.counterSaveStmt.ExecContext(ctx, metric.ID, *metric.Value); err != nil {
 			return err
 		}
 	}
@@ -206,8 +118,9 @@ func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) err
 		if _, err := s.gaugeIncrStmt.ExecContext(ctx, metric.ID, *metric.Value); err != nil {
 			return err
 		}
+
 	case model.MetricTypeCounter:
-		if _, err := s.counterIncrStmt.ExecContext(ctx, metric.ID, *metric.Delta); err != nil {
+		if _, err := s.counterIncrStmt.ExecContext(ctx, metric.ID, *metric.Value); err != nil {
 			return err
 		}
 	}
@@ -217,28 +130,33 @@ func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) err
 
 func (s *MetricStorage) LoadMetric(
 	ctx context.Context,
-	metricType model.MetricType,
-	metricName string,
+	metric model.Metric,
 ) (*model.Metric, error) {
 	if s.db == nil {
 		return nil, errors.New("database connection is not opened")
 	}
 
-	if metricName == "" {
-		return nil, errors.New("invalid empty metricName")
+	if err := metric.ID.Validate(); err != nil {
+		return nil, err
 	}
 
-	metric := &model.Metric{ID: metricName}
+	if err := metric.MType.Validate(); err != nil {
+		return nil, err
+	}
 
 	var err error
-
-	switch metricType {
+	switch metric.MType {
 	case model.MetricTypeGauge:
-		row := s.gaugeLoadStmt.QueryRowContext(ctx, metricName)
-		err = row.Scan(&metric.Value)
+		row := s.gaugeLoadStmt.QueryRowContext(ctx, metric.ID)
+		value := model.Gauge(0)
+		metric.Value = &value
+		err = row.Scan(metric.Value)
+
 	case model.MetricTypeCounter:
-		row := s.counterLoadStmt.QueryRowContext(ctx, metricName)
-		err = row.Scan(&metric.Delta)
+		row := s.counterLoadStmt.QueryRowContext(ctx, metric.ID)
+		delta := model.Counter(0)
+		metric.Delta = &delta
+		err = row.Scan(metric.Delta)
 	}
 
 	if err == sql.ErrNoRows {
@@ -249,14 +167,14 @@ func (s *MetricStorage) LoadMetric(
 		return nil, err
 	}
 
-	return metric, nil
+	return &metric, nil
 }
 
 func (s *MetricStorage) loadGaugeMetricList(
 	ctx context.Context,
 	tx *sql.Tx,
 ) ([]model.Metric, error) {
-	txStmt := tx.StmtContext(ctx, s.gaugeLoadStmt)
+	txStmt := tx.StmtContext(ctx, s.gaugeLoadListStmt)
 	rows, err := txStmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -266,7 +184,7 @@ func (s *MetricStorage) loadGaugeMetricList(
 	metrics := make([]model.Metric, 0, 50)
 
 	for rows.Next() {
-		metric := model.Metric{}
+		metric := model.MetricFromGauge("", 0)
 		if err := rows.Scan(&metric.ID, metric.Value); err != nil {
 			return nil, err
 		}
@@ -284,7 +202,7 @@ func (s *MetricStorage) loadCounterMetricList(
 	ctx context.Context,
 	tx *sql.Tx,
 ) ([]model.Metric, error) {
-	txStmt := tx.StmtContext(ctx, s.counterLoadStmt)
+	txStmt := tx.StmtContext(ctx, s.counterLoadListStmt)
 	rows, err := txStmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -294,7 +212,7 @@ func (s *MetricStorage) loadCounterMetricList(
 	metrics := make([]model.Metric, 0, 50)
 
 	for rows.Next() {
-		metric := model.Metric{}
+		metric := model.MetricFromCounter("", 0)
 		if err := rows.Scan(&metric.ID, metric.Delta); err != nil {
 			return nil, err
 		}
@@ -306,6 +224,68 @@ func (s *MetricStorage) loadCounterMetricList(
 	}
 
 	return metrics, nil
+}
+
+func (s *MetricStorage) SaveMetricList(ctx context.Context, metrics []model.Metric) error {
+	if s.db == nil {
+		return errors.New("database connection is not opened")
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	txGaugeSaveStmt := tx.StmtContext(ctx, s.gaugeSaveStmt)
+	txCounterSaveStmt := tx.StmtContext(ctx, s.counterSaveStmt)
+
+	for _, m := range metrics {
+		switch m.MType {
+		case model.MetricTypeGauge:
+			if _, err := txGaugeSaveStmt.ExecContext(ctx, m.ID, *m.Value); err != nil {
+				return err
+			}
+
+		case model.MetricTypeCounter:
+			if _, err := txCounterSaveStmt.ExecContext(ctx, m.ID, *m.Delta); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (s *MetricStorage) IncrMetricList(ctx context.Context, metrics []model.Metric) error {
+	if s.db == nil {
+		return errors.New("database connection is not opened")
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	txGaugeIncrStmt := tx.StmtContext(ctx, s.gaugeIncrStmt)
+	txCounterIncrStmt := tx.StmtContext(ctx, s.counterIncrStmt)
+
+	for _, m := range metrics {
+		switch m.MType {
+		case model.MetricTypeGauge:
+			if _, err := txGaugeIncrStmt.ExecContext(ctx, m.ID, *m.Value); err != nil {
+				return err
+			}
+
+		case model.MetricTypeCounter:
+			if _, err := txCounterIncrStmt.ExecContext(ctx, m.ID, *m.Delta); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
@@ -338,16 +318,42 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
 	return nil
+
+	// if s.db == nil {
+	// 	return errors.New("database connection is not opened")
+	// }
+
+	// tx, err := s.db.Begin()
+	// if err != nil {
+	// 	return err
+	// }
+	// defer tx.Rollback()
+
+	// txGaugeSaveStmt := tx.StmtContext(ctx, s.gaugeSaveStmt)
+	// txCounterSaveStmt := tx.StmtContext(ctx, s.counterSaveStmt)
+
+	// for _, m := range s.mCache.GetAll() {
+	// 	switch m.MType {
+	// 	case model.MetricTypeGauge:
+	// 		if _, err := txGaugeSaveStmt.ExecContext(ctx, m.ID, *m.Value); err != nil {
+	// 			return err
+	// 		}
+	// 	case model.MetricTypeCounter:
+	// 		if _, err := txCounterSaveStmt.ExecContext(ctx, m.ID, *m.Delta); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
+
+	// return tx.Commit()
 }
 
 func (s *MetricStorage) Close() {
 	for _, stmt := range []*sql.Stmt{
 		s.gaugeSaveStmt,
-		s.gaugeIncrStmt,
 		s.gaugeLoadStmt,
 		s.gaugeLoadListStmt,
 		s.counterSaveStmt,
-		s.counterIncrStmt,
 		s.counterLoadStmt,
 		s.counterLoadListStmt,
 	} {

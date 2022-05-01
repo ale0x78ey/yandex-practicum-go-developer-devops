@@ -75,19 +75,33 @@ func (mr *MockMetricStorageMockRecorder) IncrMetric(ctx, metric interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrMetric", reflect.TypeOf((*MockMetricStorage)(nil).IncrMetric), ctx, metric)
 }
 
-// LoadMetric mocks base method.
-func (m *MockMetricStorage) LoadMetric(ctx context.Context, metricType model.MetricType, metricName string) (*model.Metric, error) {
+// IncrMetricList mocks base method.
+func (m *MockMetricStorage) IncrMetricList(ctx context.Context, metrics []model.Metric) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LoadMetric", ctx, metricType, metricName)
+	ret := m.ctrl.Call(m, "IncrMetricList", ctx, metrics)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncrMetricList indicates an expected call of IncrMetricList.
+func (mr *MockMetricStorageMockRecorder) IncrMetricList(ctx, metrics interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrMetricList", reflect.TypeOf((*MockMetricStorage)(nil).IncrMetricList), ctx, metrics)
+}
+
+// LoadMetric mocks base method.
+func (m *MockMetricStorage) LoadMetric(ctx context.Context, metric model.Metric) (*model.Metric, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadMetric", ctx, metric)
 	ret0, _ := ret[0].(*model.Metric)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LoadMetric indicates an expected call of LoadMetric.
-func (mr *MockMetricStorageMockRecorder) LoadMetric(ctx, metricType, metricName interface{}) *gomock.Call {
+func (mr *MockMetricStorageMockRecorder) LoadMetric(ctx, metric interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMetric", reflect.TypeOf((*MockMetricStorage)(nil).LoadMetric), ctx, metricType, metricName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMetric", reflect.TypeOf((*MockMetricStorage)(nil).LoadMetric), ctx, metric)
 }
 
 // LoadMetricList mocks base method.
@@ -117,6 +131,20 @@ func (m *MockMetricStorage) SaveMetric(ctx context.Context, metric model.Metric)
 func (mr *MockMetricStorageMockRecorder) SaveMetric(ctx, metric interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetric", reflect.TypeOf((*MockMetricStorage)(nil).SaveMetric), ctx, metric)
+}
+
+// SaveMetricList mocks base method.
+func (m *MockMetricStorage) SaveMetricList(ctx context.Context, metrics []model.Metric) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMetricList", ctx, metrics)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveMetricList indicates an expected call of SaveMetricList.
+func (mr *MockMetricStorageMockRecorder) SaveMetricList(ctx, metrics interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetricList", reflect.TypeOf((*MockMetricStorage)(nil).SaveMetricList), ctx, metrics)
 }
 
 // Validate mocks base method.

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -9,13 +10,14 @@ import (
 
 type (
 	Metric struct {
-		ID    string     `json:"id"`
+		ID    MetricName `json:"id"`
 		MType MetricType `json:"type"`
 		Delta *Counter   `json:"delta,omitempty"`
 		Value *Gauge     `json:"value,omitempty"`
 		Hash  string     `json:"hash,omitempty"`
 	}
 
+	MetricName string
 	MetricType string
 	Gauge      float64
 	Counter    int64
@@ -23,7 +25,7 @@ type (
 
 func MetricFromGauge(id string, value Gauge) Metric {
 	return Metric{
-		ID:    id,
+		ID:    MetricName(id),
 		MType: MetricTypeGauge,
 		Value: &value,
 	}
@@ -31,7 +33,7 @@ func MetricFromGauge(id string, value Gauge) Metric {
 
 func MetricFromCounter(id string, value Counter) Metric {
 	return Metric{
-		ID:    id,
+		ID:    MetricName(id),
 		MType: MetricTypeCounter,
 		Delta: &value,
 	}
@@ -54,11 +56,19 @@ func MetricFromString(metricName string, metricType MetricType, value string) (M
 		return MetricFromCounter(metricName, counterValue), nil
 
 	default:
-		return Metric{}, fmt.Errorf("unkown MType: %s", metricType)
+		return Metric{}, fmt.Errorf("unknown MetricType: %s", metricType)
 	}
 }
 
 func (m Metric) Validate() error {
+	if err := m.ID.Validate(); err != nil {
+		return err
+	}
+
+	if err := m.MType.Validate(); err != nil {
+		return err
+	}
+
 	switch m.MType {
 	case MetricTypeGauge:
 		if m.Value == nil {
@@ -69,8 +79,9 @@ func (m Metric) Validate() error {
 			return fmt.Errorf("invalid Delta == nil for MType: %s", m.MType)
 		}
 	default:
-		return fmt.Errorf("unkown MType: %s", m.MType)
+		return fmt.Errorf("unknown MetricType: %s", m.MType)
 	}
+
 	return nil
 }
 
@@ -92,8 +103,15 @@ func (m Metric) ProcessHash(key string) (string, error) {
 	case MetricTypeCounter:
 		return pkg.Hash([]byte(fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Delta)), []byte(key))
 	default:
-		return "", fmt.Errorf("unkown MType: %s", m.MType)
+		return "", fmt.Errorf("unkown MetricType: %s", m.MType)
 	}
+}
+
+func (t MetricName) Validate() error {
+	if t == "" {
+		return errors.New("invalid empty MetricName")
+	}
+	return nil
 }
 
 const (
@@ -106,7 +124,7 @@ func (t MetricType) Validate() error {
 	case MetricTypeGauge, MetricTypeCounter:
 		return nil
 	default:
-		return fmt.Errorf("unkown MType: %s", t)
+		return fmt.Errorf("unknown MetricType: %s", t)
 	}
 }
 

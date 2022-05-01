@@ -162,7 +162,7 @@ func TestGetMetricWithURL(t *testing.T) {
 			path: "/value/abrakadabra/metric3",
 			want: want{
 				code: http.StatusNotImplemented,
-				body: "unkown MType: abrakadabra\n",
+				body: "unknown MetricType: abrakadabra\n",
 			},
 		},
 	}
@@ -181,11 +181,9 @@ func TestGetMetricWithURL(t *testing.T) {
 		metricStorage.EXPECT().LoadMetric(
 			gomock.Any(),
 			gomock.Any(),
-			gomock.Any(),
 		).Return(&metric1, nil),
 
 		metricStorage.EXPECT().LoadMetric(
-			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
 		).Return(&metric2, nil),
@@ -235,7 +233,7 @@ func TestGetMetricWithBody(t *testing.T) {
 			metric: model.Metric{ID: "metric3", MType: model.MetricType("abrakadabra")},
 			want: want{
 				code: http.StatusNotImplemented,
-				body: "unkown MType: abrakadabra\n",
+				body: "unknown MetricType: abrakadabra\n",
 			},
 		},
 	}
@@ -254,11 +252,9 @@ func TestGetMetricWithBody(t *testing.T) {
 		metricStorage.EXPECT().LoadMetric(
 			gomock.Any(),
 			gomock.Any(),
-			gomock.Any(),
 		).Return(&metric1, nil),
 
 		metricStorage.EXPECT().LoadMetric(
-			gomock.Any(),
 			gomock.Any(),
 			gomock.Any(),
 		).Return(&metric2, nil),

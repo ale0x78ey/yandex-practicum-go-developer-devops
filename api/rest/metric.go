@@ -63,50 +63,78 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(data))
 }
 
-func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
-	metricType := model.MetricType(chi.URLParam(r, "metricType"))
-	metricName := chi.URLParam(r, "metricName")
+func (h *Handler) updateMetricListWithBody(w http.ResponseWriter, r *http.Request) {
+	var metrics []model.Metric
+	if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	metric, err := h.Server.LoadMetric(r.Context(), metricType, metricName)
+	if err := h.Server.PushMetricList(r.Context(), metrics); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(struct{}{})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if metric == nil {
-		http.Error(w, fmt.Sprintf("Metric %s not found", metricName), http.StatusNotFound)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, string(data))
+}
+
+func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
+	metricType := model.MetricType(chi.URLParam(r, "metricType"))
+	metricName := model.MetricName(chi.URLParam(r, "metricName"))
+
+	metric := model.Metric{
+		ID:    metricName,
+		MType: metricType,
+	}
+
+	m, err := h.Server.LoadMetric(r.Context(), metric)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if m == nil {
+		http.Error(w, fmt.Sprintf("Metric %s not found", metric.ID), http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, metric.String())
+	fmt.Fprint(w, m.String())
 }
 
 func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {
-	var metricRequest model.Metric
-	if err := json.NewDecoder(r.Body).Decode(&metricRequest); err != nil {
+	var metric model.Metric
+	if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := metricRequest.MType.Validate(); err != nil {
+	if err := metric.MType.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusNotImplemented)
 		return
 	}
 
-	metric, err := h.Server.LoadMetric(r.Context(), metricRequest.MType, metricRequest.ID)
+	m, err := h.Server.LoadMetric(r.Context(), metric)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if metric == nil {
-		http.Error(w, fmt.Sprintf("Metric %s not found", metricRequest.ID), http.StatusNotFound)
+	if m == nil {
+		http.Error(w, fmt.Sprintf("Metric %s not found", metric.ID), http.StatusNotFound)
 		return
 	}
 
-	data, err := json.Marshal(metric)
+	data, err := json.Marshal(m)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

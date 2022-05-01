@@ -10,13 +10,10 @@ import (
 type MetricStorage interface {
 	SaveMetric(ctx context.Context, metric model.Metric) error
 	IncrMetric(ctx context.Context, metric model.Metric) error
+	LoadMetric(ctx context.Context, metric model.Metric) (*model.Metric, error)
 
-	LoadMetric(
-		ctx context.Context,
-		metricType model.MetricType,
-		metricName string,
-	) (*model.Metric, error)
-
+	SaveMetricList(ctx context.Context, metrics []model.Metric) error
+	IncrMetricList(ctx context.Context, metrics []model.Metric) error
 	LoadMetricList(ctx context.Context) ([]model.Metric, error)
 
 	Flush(ctx context.Context) error
