@@ -26,19 +26,19 @@ func (s *MetricStorage) PrepareStatements(ctx context.Context) error {
 		return err
 	}
 
-	if err := s.counterGaugeSaveStmt(ctx); err != nil {
+	if err := s.prepareCounterSaveStmt(ctx); err != nil {
 		return err
 	}
 
-	if err := s.counterGaugeIncrStmt(ctx); err != nil {
+	if err := s.prepareCounterIncrStmt(ctx); err != nil {
 		return err
 	}
 
-	if err := s.counterGaugeLoadStmt(ctx); err != nil {
+	if err := s.prepareCounterLoadStmt(ctx); err != nil {
 		return err
 	}
 
-	if err := s.counterGaugeLoadListStmt(ctx); err != nil {
+	if err := s.prepareCounterLoadListStmt(ctx); err != nil {
 		return err
 	}
 
@@ -63,7 +63,7 @@ func (s *MetricStorage) prepareGaugeIncrStmt(ctx context.Context) error {
 	expr := `
 INSERT INTO gauge_metrics (id, value)
 VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value + $2`
+ON CONFLICT (id) DO UPDATE SET value = gauge_metrics.value + $2`
 
 	stmt, err := s.db.PrepareContext(ctx, expr)
 	if err != nil {
@@ -93,7 +93,7 @@ func (s *MetricStorage) prepareGaugeLoadListStmt(ctx context.Context) error {
 	return nil
 }
 
-func (s *MetricStorage) counterGaugeSaveStmt(ctx context.Context) error {
+func (s *MetricStorage) prepareCounterSaveStmt(ctx context.Context) error {
 	expr := `
 INSERT INTO counter_metrics (id, value)
 VALUES ($1, $2)
@@ -107,11 +107,11 @@ ON CONFLICT (id) DO UPDATE SET value = $2`
 	return nil
 }
 
-func (s *MetricStorage) counterGaugeIncrStmt(ctx context.Context) error {
+func (s *MetricStorage) prepareCounterIncrStmt(ctx context.Context) error {
 	expr := `
 INSERT INTO counter_metrics (id, value)
 VALUES ($1, $2)
-ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value + $2`
+ON CONFLICT (id) DO UPDATE SET value = counter_metrics.value + $2`
 
 	stmt, err := s.db.PrepareContext(ctx, expr)
 	if err != nil {
@@ -121,7 +121,7 @@ ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value + $2`
 	return nil
 }
 
-func (s *MetricStorage) counterGaugeLoadStmt(ctx context.Context) error {
+func (s *MetricStorage) prepareCounterLoadStmt(ctx context.Context) error {
 	expr := "SELECT value FROM counter_metrics WHERE id = $1"
 
 	stmt, err := s.db.PrepareContext(ctx, expr)
@@ -132,7 +132,7 @@ func (s *MetricStorage) counterGaugeLoadStmt(ctx context.Context) error {
 	return nil
 }
 
-func (s *MetricStorage) counterGaugeLoadListStmt(ctx context.Context) error {
+func (s *MetricStorage) prepareCounterLoadListStmt(ctx context.Context) error {
 	expr := "SELECT id, value FROM counter_metrics"
 
 	stmt, err := s.db.PrepareContext(ctx, expr)

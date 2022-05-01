@@ -120,7 +120,7 @@ func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) err
 		}
 
 	case model.MetricTypeCounter:
-		if _, err := s.counterIncrStmt.ExecContext(ctx, metric.ID, *metric.Value); err != nil {
+		if _, err := s.counterIncrStmt.ExecContext(ctx, metric.ID, *metric.Delta); err != nil {
 			return err
 		}
 	}
