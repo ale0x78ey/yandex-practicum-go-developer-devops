@@ -12,5 +12,5 @@ func Hash(data []byte, key []byte) (string, error) {
 		return "", err
 	}
 	hash := h.Sum(nil)
-	return fmt.Sprintf("%s", hash), nil
+	return fmt.Sprintf("%x", hash), nil
 }

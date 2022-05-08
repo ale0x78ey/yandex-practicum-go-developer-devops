@@ -103,9 +103,9 @@ func (m Metric) ValidateHash(key string) (bool, error) {
 func (m Metric) String() string {
 	switch m.MType {
 	case MetricTypeGauge:
-		return m.Value.String()
+		return (*m.Value).String()
 	case MetricTypeCounter:
-		return m.Delta.String()
+		return (*m.Delta).String()
 	default:
 		return ""
 	}
@@ -116,9 +116,9 @@ func (m Metric) ProcessHash(key string) (string, error) {
 
 	switch m.MType {
 	case MetricTypeGauge:
-		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Value)
+		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, *m.Value)
 	case MetricTypeCounter:
-		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Delta)
+		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, *m.Delta)
 	default:
 		return "", fmt.Errorf("unkown MetricType: %s", m.MType)
 	}
