@@ -59,7 +59,7 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !valid {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid hash value", http.StatusBadRequest)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *Handler) updateMetricListWithBody(w http.ResponseWriter, r *http.Reques
 		}
 
 		if !valid {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "invalid hash value", http.StatusBadRequest)
 			return
 		}
 	}
