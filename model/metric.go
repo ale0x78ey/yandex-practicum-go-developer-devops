@@ -131,7 +131,7 @@ func (m Metric) ProcessHash(key string) (string, error) {
 	return hash, nil
 }
 
-func (m Metric) UpdateHash(key string) error {
+func (m *Metric) UpdateHash(key string) error {
 	if key == "" {
 		return nil
 	}
