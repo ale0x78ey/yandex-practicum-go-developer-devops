@@ -89,7 +89,7 @@ func NewAgent(config Config, updateURL string) (*Agent, error) {
 	return a, nil
 }
 
-func (a *Agent) Run(ctx context.Context) {
+func (a *Agent) Run(ctx context.Context) error {
 	pollTicker := time.NewTicker(a.config.PollInterval)
 	defer pollTicker.Stop()
 
@@ -103,7 +103,7 @@ func (a *Agent) Run(ctx context.Context) {
 		case <-sendTicker.C:
 			a.postMetrics(ctx)
 		case <-ctx.Done():
-			return
+			return nil
 		}
 	}
 }

@@ -43,5 +43,7 @@ func main() {
 		log.Fatalf("Failed to create an agent: %v", err)
 	}
 
-	agent.Run(ctx)
+	if err := agent.Run(ctx); err != nil {
+		log.Fatalf("Failed in a running agent: %v", err)
+	}
 }
