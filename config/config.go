@@ -26,8 +26,6 @@ func LoadAgentConfig() *Config {
 		Agent: NewAgentConfig(),
 	}
 
-	flag.Parse()
-
 	if err := env.Parse(conf.Http); err != nil {
 		log.Fatalf("Failed to parse http config options: %v", err)
 	}
@@ -35,6 +33,8 @@ func LoadAgentConfig() *Config {
 	if err := env.Parse(conf.Agent); err != nil {
 		log.Fatalf("Failed to parse agent config options: %v", err)
 	}
+
+	flag.Parse()
 
 	return conf
 }
