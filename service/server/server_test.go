@@ -42,14 +42,6 @@ func TestServer_PushMetric(t *testing.T) {
 			metric:  model.MetricFromCounter("metric2", model.Counter(0)),
 			wantErr: false,
 		},
-		{
-			name: "invalid metricType for metric3",
-			metric: model.Metric{
-				ID:    "metric3",
-				MType: model.MetricType("abrakadabra"),
-			},
-			wantErr: true,
-		},
 	}
 
 	mockCtrl := gomock.NewController(t)

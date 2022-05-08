@@ -85,10 +85,6 @@ func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) err
 		return errors.New("database connection is not opened")
 	}
 
-	if err := metric.Validate(); err != nil {
-		return err
-	}
-
 	switch metric.MType {
 	case model.MetricTypeGauge:
 		if _, err := s.gaugeSaveStmt.ExecContext(ctx, metric.ID, *metric.Value); err != nil {
@@ -107,10 +103,6 @@ func (s *MetricStorage) SaveMetric(ctx context.Context, metric model.Metric) err
 func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) error {
 	if s.db == nil {
 		return errors.New("database connection is not opened")
-	}
-
-	if err := metric.Validate(); err != nil {
-		return err
 	}
 
 	switch metric.MType {
@@ -134,14 +126,6 @@ func (s *MetricStorage) LoadMetric(
 ) (*model.Metric, error) {
 	if s.db == nil {
 		return nil, errors.New("database connection is not opened")
-	}
-
-	if err := metric.ID.Validate(); err != nil {
-		return nil, err
-	}
-
-	if err := metric.MType.Validate(); err != nil {
-		return nil, err
 	}
 
 	var err error

@@ -44,7 +44,6 @@ func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
 	h.Router.Use(middleware.GzipEncoder())
 
 	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}", func(r chi.Router) {
-		r.Use(middleware.MetricTypeValidator)
 		r.Post("/", h.updateMetricWithURL)
 	})
 
@@ -53,7 +52,6 @@ func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
 	h.Router.Post("/updates/", h.updateMetricListWithBody)
 
 	h.Router.Route("/value/{metricType}/{metricName}", func(r chi.Router) {
-		r.Use(middleware.MetricTypeValidator)
 		r.Get("/", h.getMetricWithURL)
 	})
 

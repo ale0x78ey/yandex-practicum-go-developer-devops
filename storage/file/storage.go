@@ -47,10 +47,6 @@ func NewMetricStorage(config Config) (*MetricStorage, error) {
 }
 
 func (s *MetricStorage) saveMetric(ctx context.Context, metric model.Metric) error {
-	if err := metric.Validate(); err != nil {
-		return err
-	}
-
 	metrics, ok := s.metrics[metric.MType]
 	if !ok {
 		metrics = make(metricsMap)

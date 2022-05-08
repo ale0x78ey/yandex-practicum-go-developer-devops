@@ -50,39 +50,13 @@ func NewServer(config Config, metricStorage storage.MetricStorage) (*Server, err
 	return srv, nil
 }
 
-func (s *Server) validateMetricHash(metric model.Metric) (bool, error) {
-	if s.config.Key != "" {
-		hash, err := metric.ProcessHash(s.config.Key)
-		if err != nil {
-			return false, err
-		}
-		if hash != metric.Hash {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
 func (s *Server) PushMetric(ctx context.Context, metric model.Metric) error {
-	if err := metric.Validate(); err != nil {
-		return err
-	}
-
-	v, err := s.validateMetricHash(metric)
-	if err != nil {
-		return err
-	}
-	if !v {
-		return errors.New("invalid hash")
-	}
-
 	switch metric.MType {
 	case model.MetricTypeGauge:
 		return s.MetricStorage.SaveMetric(ctx, metric)
 	case model.MetricTypeCounter:
 		return s.MetricStorage.IncrMetric(ctx, metric)
 	}
-
 	return nil
 }
 
@@ -91,18 +65,6 @@ func (s *Server) PushMetricList(ctx context.Context, metrics []model.Metric) err
 	counterMetrics := make([]model.Metric, 0, len(metrics))
 
 	for _, metric := range metrics {
-		if err := metric.Validate(); err != nil {
-			return err
-		}
-
-		v, err := s.validateMetricHash(metric)
-		if err != nil {
-			return err
-		}
-		if !v {
-			return errors.New("invalid hash")
-		}
-
 		switch metric.MType {
 		case model.MetricTypeGauge:
 			gaugeMetrics = append(gaugeMetrics, metric)
@@ -127,13 +89,11 @@ func (s *Server) LoadMetric(ctx context.Context, metric model.Metric) (*model.Me
 	if err != nil {
 		return nil, err
 	}
-	if s.config.Key != "" {
-		hash, err := m.ProcessHash(s.config.Key)
-		if err != nil {
-			return nil, err
-		}
-		m.Hash = hash
+
+	if err := m.UpdateHash(s.config.Key); err != nil {
+		return nil, err
 	}
+
 	return m, nil
 }
 
@@ -145,14 +105,24 @@ func (s *Server) LoadMetricList(ctx context.Context) ([]model.Metric, error) {
 	if s.config.Key != "" {
 		for i := range metricList {
 			metric := &metricList[i]
-			hash, err := metric.ProcessHash(s.config.Key)
-			if err != nil {
+			if err := metric.UpdateHash(s.config.Key); err != nil {
 				return nil, err
 			}
-			metric.Hash = hash
 		}
 	}
 	return metricList, nil
+}
+
+func (s *Server) ValidateHash(metric model.Metric) (bool, error) {
+	if s.config.Key == "" {
+		return true, nil
+	}
+
+	v, err := metric.ValidateHash(s.config.Key)
+	if err != nil {
+		return false, err
+	}
+	return v, nil
 }
 
 func (s *Server) Run(ctx context.Context) error {

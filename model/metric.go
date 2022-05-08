@@ -40,24 +40,31 @@ func MetricFromCounter(id string, value Counter) Metric {
 }
 
 func MetricFromString(metricName string, metricType MetricType, value string) (Metric, error) {
+	var metric Metric
 	switch metricType {
 	case MetricTypeGauge:
 		gaugeValue, err := GaugeFromString(value)
 		if err != nil {
 			return Metric{}, err
 		}
-		return MetricFromGauge(metricName, gaugeValue), nil
+		metric = MetricFromGauge(metricName, gaugeValue)
 
 	case MetricTypeCounter:
 		counterValue, err := CounterFromString(value)
 		if err != nil {
 			return Metric{}, err
 		}
-		return MetricFromCounter(metricName, counterValue), nil
+		metric = MetricFromCounter(metricName, counterValue)
 
 	default:
 		return Metric{}, fmt.Errorf("unknown MetricType: %s", metricType)
 	}
+
+	if err := metric.Validate(); err != nil {
+		return Metric{}, err
+	}
+
+	return metric, nil
 }
 
 func (m Metric) Validate() error {
@@ -85,6 +92,14 @@ func (m Metric) Validate() error {
 	return nil
 }
 
+func (m Metric) ValidateHash(key string) (bool, error) {
+	hash, err := m.ProcessHash(key)
+	if err != nil {
+		return false, err
+	}
+	return hash == m.Hash, nil
+}
+
 func (m Metric) String() string {
 	switch m.MType {
 	case MetricTypeGauge:
@@ -97,14 +112,38 @@ func (m Metric) String() string {
 }
 
 func (m Metric) ProcessHash(key string) (string, error) {
+	var data string
+
 	switch m.MType {
 	case MetricTypeGauge:
-		return pkg.Hash([]byte(fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Value)), []byte(key))
+		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Value)
 	case MetricTypeCounter:
-		return pkg.Hash([]byte(fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Delta)), []byte(key))
+		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, m.Delta)
 	default:
 		return "", fmt.Errorf("unkown MetricType: %s", m.MType)
 	}
+
+	hash, err := pkg.Hash([]byte(data), []byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
+}
+
+func (m Metric) UpdateHash(key string) error {
+	if key == "" {
+		return nil
+	}
+
+	hash, err := m.ProcessHash(key)
+	if err != nil {
+		return err
+	}
+
+	m.Hash = hash
+
+	return nil
 }
 
 func (t MetricName) Validate() error {

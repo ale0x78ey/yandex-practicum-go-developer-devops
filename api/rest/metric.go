@@ -16,6 +16,11 @@ func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metricName := chi.URLParam(r, "metricName")
 	metricStringValue := chi.URLParam(r, "metricValue")
 
+	if err := metricType.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusNotImplemented)
+		return
+	}
+
 	metric, err := model.MetricFromString(metricName, metricType, metricStringValue)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -23,7 +28,7 @@ func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.Server.PushMetric(r.Context(), metric); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -43,6 +48,17 @@ func (h *Handler) updateMetricWithBody(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := metric.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	valid, err := h.Server.ValidateHash(metric)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if !valid {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -70,6 +86,24 @@ func (h *Handler) updateMetricListWithBody(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	for _, metric := range metrics {
+		if err := metric.Validate(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		valid, err := h.Server.ValidateHash(metric)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if !valid {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	if err := h.Server.PushMetricList(r.Context(), metrics); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,6 +127,16 @@ func (h *Handler) getMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metric := model.Metric{
 		ID:    metricName,
 		MType: metricType,
+	}
+
+	if err := metric.MType.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusNotImplemented)
+		return
+	}
+
+	if err := metric.ID.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	m, err := h.Server.LoadMetric(r.Context(), metric)
@@ -120,6 +164,11 @@ func (h *Handler) getMetricWithBody(w http.ResponseWriter, r *http.Request) {
 
 	if err := metric.MType.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusNotImplemented)
+		return
+	}
+
+	if err := metric.ID.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

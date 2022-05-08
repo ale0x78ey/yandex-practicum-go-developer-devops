@@ -159,14 +159,9 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 	go func() {
 		defer a.wg.Done()
 
-		if a.config.Key != "" {
-			hash, err := metric.ProcessHash(a.config.Key)
-			if err != nil {
-				log.Printf("failed to post %v: %v", metric, err)
-				return
-			}
-
-			metric.Hash = hash
+		if err := metric.UpdateHash(a.config.Key); err != nil {
+			log.Printf("failed to post %v: %v", metric, err)
+			return
 		}
 
 		_, err := a.client.R().
