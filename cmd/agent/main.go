@@ -37,7 +37,7 @@ func main() {
 
 	agent, err := agent.NewAgent(
 		*cfg.Agent,
-		fmt.Sprintf(updateURLFormat, cfg.Http.ServerAddress),
+		fmt.Sprintf(updateURLFormat, cfg.HTTP.ServerAddress),
 	)
 	if err != nil {
 		log.Fatalf("Failed to create an agent: %v", err)

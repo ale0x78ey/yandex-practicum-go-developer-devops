@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	Http      *HttpConfig
+	HTTP      *HTTPConfig
 	Server    *server.Config
 	StoreFile *file.Config
 	Agent     *agent.Config
@@ -22,13 +22,13 @@ type Config struct {
 
 func LoadAgentConfig() *Config {
 	conf := &Config{
-		Http:  NewHttpConfig(),
+		HTTP:  NewHTTPConfig(),
 		Agent: NewAgentConfig(),
 	}
 
 	flag.Parse()
 
-	if err := env.Parse(conf.Http); err != nil {
+	if err := env.Parse(conf.HTTP); err != nil {
 		log.Fatalf("Failed to parse http config options: %v", err)
 	}
 
@@ -41,7 +41,7 @@ func LoadAgentConfig() *Config {
 
 func LoadServerConfig() *Config {
 	conf := &Config{
-		Http:      NewHttpConfig(),
+		HTTP:      NewHTTPConfig(),
 		Server:    NewServerConfig(),
 		StoreFile: NewStoreFileConfig(),
 		DB:        NewDBConfig(),
@@ -49,7 +49,7 @@ func LoadServerConfig() *Config {
 
 	flag.Parse()
 
-	if err := env.Parse(conf.Http); err != nil {
+	if err := env.Parse(conf.HTTP); err != nil {
 		log.Fatalf("Failed to parse http config options: %v", err)
 	}
 

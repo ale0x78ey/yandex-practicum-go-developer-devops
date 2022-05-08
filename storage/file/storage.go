@@ -84,8 +84,6 @@ func (s *MetricStorage) IncrMetric(ctx context.Context, metric model.Metric) err
 	}
 
 	return s.saveMetric(ctx, metric)
-
-	return nil
 }
 
 func (s *MetricStorage) loadMetric(

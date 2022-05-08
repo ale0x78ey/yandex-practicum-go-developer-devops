@@ -8,12 +8,12 @@ const (
 	DefaultServerAddress = "127.0.0.1:8080"
 )
 
-type HttpConfig struct {
+type HTTPConfig struct {
 	ServerAddress string `env:"ADDRESS"`
 }
 
-func NewHttpConfig() *HttpConfig {
-	cfg := HttpConfig{}
+func NewHTTPConfig() *HTTPConfig {
+	cfg := HTTPConfig{}
 	flag.StringVar(&cfg.ServerAddress, "a", DefaultServerAddress, "ADDRESS")
 	return &cfg
 }
