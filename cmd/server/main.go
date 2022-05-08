@@ -68,7 +68,7 @@ func main() {
 
 	go func() {
 		if err := s.Run(ctx); err != nil {
-			log.Fatalf("Failed to run a server: %v", err)
+			log.Fatalf("Failed in a running server: %v", err)
 		}
 		if err := httpServer.Shutdown(ctx); err != nil {
 			log.Fatalf("HTTP Server failed: %v", err)

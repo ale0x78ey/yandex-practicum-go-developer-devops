@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/middleware"
@@ -33,7 +34,12 @@ func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
 		Router: router,
 	}
 
+	logger := httplog.NewLogger("http-request-logger", httplog.Options{
+		JSON: true,
+	})
+
 	h.Router.Use(chimw.Recoverer)
+	h.Router.Use(httplog.RequestLogger(logger))
 	h.Router.Use(middleware.GzipDecoder())
 	h.Router.Use(middleware.GzipEncoder())
 
@@ -55,7 +61,7 @@ func NewHandler(cfg *config.Config, srv *server.Server) (*Handler, error) {
 
 	h.Router.Get("/", h.getMetricList)
 
-	h.Router.Get("/ping", h.getStorageStatus)
+	h.Router.Get("/ping", h.heartbeatStatus)
 
 	return h, nil
 }

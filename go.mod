@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/caarlos0/env/v6 v6.9.1
 	github.com/go-chi/chi/v5 v5.0.7
+	github.com/go-chi/httplog v0.2.4
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/golang/mock v1.6.0
@@ -27,6 +28,7 @@ require (
 	github.com/jackc/pgx/v4 v4.10.1 // indirect
 	github.com/lib/pq v1.10.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rs/zerolog v1.18.1-0.20200514152719-663cbb4c8469 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect

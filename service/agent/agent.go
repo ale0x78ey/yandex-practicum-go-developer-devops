@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
@@ -88,7 +89,7 @@ func NewAgent(config Config, updateURL string) (*Agent, error) {
 	return a, nil
 }
 
-func (a *Agent) Run(ctx context.Context) error {
+func (a *Agent) Run(ctx context.Context) {
 	pollTicker := time.NewTicker(a.config.PollInterval)
 	defer pollTicker.Stop()
 
@@ -102,7 +103,7 @@ func (a *Agent) Run(ctx context.Context) error {
 		case <-sendTicker.C:
 			a.postMetrics(ctx)
 		case <-ctx.Done():
-			return nil
+			return
 		}
 	}
 }
@@ -159,11 +160,13 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 		defer a.wg.Done()
 
 		if a.config.Key != "" {
-			if hash, err := metric.ProcessHash(a.config.Key); err == nil {
-				metric.Hash = hash
-			} else {
+			hash, err := metric.ProcessHash(a.config.Key)
+			if err != nil {
+				log.Printf("failed to post %v: %v", metric, err)
 				return
 			}
+
+			metric.Hash = hash
 		}
 
 		_, err := a.client.R().
@@ -171,6 +174,7 @@ func (a *Agent) post(ctx context.Context, metric model.Metric) {
 			SetBody(metric).
 			Post(a.updateURL)
 		if err != nil {
+			log.Printf("failed to post %v: %v", metric, err)
 		}
 	}()
 }

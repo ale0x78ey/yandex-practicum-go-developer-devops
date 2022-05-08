@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
@@ -164,14 +163,16 @@ func (s *Server) Run(ctx context.Context) error {
 		select {
 		case <-storeTicker.C:
 			if err := s.Flush(ctx); err != nil {
-				log.Fatalf("Failed to flush: %v", err)
+				return fmt.Errorf("failed to flush: %w", err)
 			}
 		case <-ctx.Done():
 			ctx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
 			defer cancel()
+
 			if err := s.Flush(ctx); err != nil {
-				log.Fatalf("Failed to flush: %v", err)
+				return fmt.Errorf("failed to flush: %w", err)
 			}
+
 			return nil
 		}
 	}
