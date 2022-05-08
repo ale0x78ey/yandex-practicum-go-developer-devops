@@ -47,8 +47,6 @@ func LoadServerConfig() *Config {
 		DB:        NewDBConfig(),
 	}
 
-	flag.Parse()
-
 	if err := env.Parse(conf.Http); err != nil {
 		log.Fatalf("Failed to parse http config options: %v", err)
 	}
@@ -64,6 +62,8 @@ func LoadServerConfig() *Config {
 	if err := env.Parse(conf.DB); err != nil {
 		log.Fatalf("Failed to parse DB config options: %v", err)
 	}
+
+	flag.Parse()
 
 	return conf
 }
