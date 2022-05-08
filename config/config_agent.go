@@ -17,6 +17,7 @@ func NewAgentConfig() *agent.Config {
 
 	flag.DurationVar(&cfg.ReportInterval, "r", agent.DefaultReportInterval, "REPORT_INTERVAL")
 	flag.DurationVar(&cfg.PollInterval, "p", agent.DefaultPollInterval, "POLL_INTERVAL")
+	flag.StringVar(&cfg.Key, "k", "", "KEY")
 
 	return &cfg
 }
