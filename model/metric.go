@@ -116,9 +116,9 @@ func (m Metric) ProcessHash(key string) (string, error) {
 
 	switch m.MType {
 	case MetricTypeGauge:
-		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, *m.Value)
+		data = fmt.Sprintf("%s:%s:%f", m.ID, m.MType, float64(*m.Value))
 	case MetricTypeCounter:
-		data = fmt.Sprintf("%s:%s:%s", m.ID, m.MType, *m.Delta)
+		data = fmt.Sprintf("%s:%s:%d", m.ID, m.MType, int64(*m.Delta))
 	default:
 		return "", fmt.Errorf("unkown MetricType: %s", m.MType)
 	}
