@@ -19,5 +19,5 @@ type MetricStorage interface {
 	Flush(ctx context.Context) error
 	Close()
 
-	Validate(ctx context.Context) error
+	Heartbeat(ctx context.Context) error
 }

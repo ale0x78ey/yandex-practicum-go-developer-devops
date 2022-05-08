@@ -172,6 +172,6 @@ func (s *MetricStorage) Flush(ctx context.Context) error {
 func (s *MetricStorage) Close() {
 }
 
-func (s *MetricStorage) Validate(ctx context.Context) error {
+func (s *MetricStorage) Heartbeat(ctx context.Context) error {
 	return nil
 }

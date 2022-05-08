@@ -302,34 +302,6 @@ func (s *MetricStorage) LoadMetricList(ctx context.Context) ([]model.Metric, err
 
 func (s *MetricStorage) Flush(ctx context.Context) error {
 	return nil
-
-	// if s.db == nil {
-	// 	return errors.New("database connection is not opened")
-	// }
-
-	// tx, err := s.db.Begin()
-	// if err != nil {
-	// 	return err
-	// }
-	// defer tx.Rollback()
-
-	// txGaugeSaveStmt := tx.StmtContext(ctx, s.gaugeSaveStmt)
-	// txCounterSaveStmt := tx.StmtContext(ctx, s.counterSaveStmt)
-
-	// for _, m := range s.mCache.GetAll() {
-	// 	switch m.MType {
-	// 	case model.MetricTypeGauge:
-	// 		if _, err := txGaugeSaveStmt.ExecContext(ctx, m.ID, *m.Value); err != nil {
-	// 			return err
-	// 		}
-	// 	case model.MetricTypeCounter:
-	// 		if _, err := txCounterSaveStmt.ExecContext(ctx, m.ID, *m.Delta); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
-
-	// return tx.Commit()
 }
 
 func (s *MetricStorage) Close() {
@@ -349,6 +321,6 @@ func (s *MetricStorage) Close() {
 	s.db.Close()
 }
 
-func (s *MetricStorage) Validate(ctx context.Context) error {
+func (s *MetricStorage) Heartbeat(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }

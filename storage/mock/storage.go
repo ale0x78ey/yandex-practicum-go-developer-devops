@@ -61,6 +61,20 @@ func (mr *MockMetricStorageMockRecorder) Flush(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flush", reflect.TypeOf((*MockMetricStorage)(nil).Flush), ctx)
 }
 
+// Heartbeat mocks base method.
+func (m *MockMetricStorage) Heartbeat(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Heartbeat", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Heartbeat indicates an expected call of Heartbeat.
+func (mr *MockMetricStorageMockRecorder) Heartbeat(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Heartbeat", reflect.TypeOf((*MockMetricStorage)(nil).Heartbeat), ctx)
+}
+
 // IncrMetric mocks base method.
 func (m *MockMetricStorage) IncrMetric(ctx context.Context, metric model.Metric) error {
 	m.ctrl.T.Helper()
@@ -145,18 +159,4 @@ func (m *MockMetricStorage) SaveMetricList(ctx context.Context, metrics []model.
 func (mr *MockMetricStorageMockRecorder) SaveMetricList(ctx, metrics interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetricList", reflect.TypeOf((*MockMetricStorage)(nil).SaveMetricList), ctx, metrics)
-}
-
-// Validate mocks base method.
-func (m *MockMetricStorage) Validate(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Validate", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Validate indicates an expected call of Validate.
-func (mr *MockMetricStorageMockRecorder) Validate(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Validate", reflect.TypeOf((*MockMetricStorage)(nil).Validate), ctx)
 }

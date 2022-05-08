@@ -90,6 +90,10 @@ func (s *Server) LoadMetric(ctx context.Context, metric model.Metric) (*model.Me
 		return nil, err
 	}
 
+	if m == nil {
+		return m, nil
+	}
+
 	if err := m.UpdateHash(s.config.Key); err != nil {
 		return nil, err
 	}
