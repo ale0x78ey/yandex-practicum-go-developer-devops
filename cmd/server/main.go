@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/api/rest"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
@@ -56,7 +55,7 @@ func main() {
 		log.Fatalf("Failed to create a server: %v", err)
 	}
 
-	h, err := rest.NewHandler(cfg, s)
+	h, err := server.NewHandler(s)
 	if err != nil {
 		log.Fatalf("Failed to create a handler: %v", err)
 	}

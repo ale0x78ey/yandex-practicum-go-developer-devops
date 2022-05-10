@@ -1,10 +1,11 @@
-package rest
+package server
 
 import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -12,8 +13,31 @@ import (
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/pkg/testutils"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
 	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
 )
+
+func TestNewHandler(t *testing.T) {
+	_, err := NewHandler(nil)
+	assert.NotNil(t, err)
+
+	h, err := NewHandler(&Server{})
+	assert.Nil(t, err)
+	assert.NotNil(t, h)
+}
+
+func newTestHandler(t *testing.T, metricStorage storage.MetricStorage) *Handler {
+	config := Config{
+		StoreInterval: 1 * time.Second,
+	}
+	srv, err := NewServer(config, metricStorage)
+	require.NoError(t, err)
+
+	h, err := NewHandler(srv)
+	require.NoError(t, err)
+
+	return h
+}
 
 func TestUpdateMetricWithURL(t *testing.T) {
 	type want struct {
@@ -269,7 +293,4 @@ func TestGetMetricWithBody(t *testing.T) {
 			assert.Equal(t, tt.want.body, body)
 		})
 	}
-}
-
-func TestGetMetricList(t *testing.T) {
 }

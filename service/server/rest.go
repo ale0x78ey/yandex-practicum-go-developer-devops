@@ -1,15 +1,68 @@
-package rest
+package server
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	mw "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
 
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/middleware"
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
 )
+
+type Handler struct {
+	Server *Server
+	Router *chi.Mux
+}
+
+func NewHandler(server *Server) (*Handler, error) {
+	if server == nil {
+		return nil, errors.New("invalid server value: nil")
+	}
+
+	router := chi.NewRouter()
+
+	h := &Handler{
+		Server: server,
+		Router: router,
+	}
+
+	logger := httplog.NewLogger("http-request-logger", httplog.Options{
+		JSON: true,
+	})
+
+	h.Router.Use(mw.Recoverer)
+	h.Router.Use(httplog.RequestLogger(logger))
+	h.Router.Use(middleware.GzipDecoder())
+	h.Router.Use(middleware.GzipEncoder())
+
+	h.Router.Route("/update/{metricType}/{metricName}/{metricValue}", func(r chi.Router) {
+		r.Post("/", h.updateMetricWithURL)
+	})
+
+	h.Router.Post("/update/", h.updateMetricWithBody)
+
+	h.Router.Post("/updates/", h.updateMetricListWithBody)
+
+	h.Router.Route("/value/{metricType}/{metricName}", func(r chi.Router) {
+		r.Get("/", h.getMetricWithURL)
+	})
+
+	h.Router.Post("/value/", h.getMetricWithBody)
+
+	h.Router.Get("/", h.getMetricList)
+
+	h.Router.Get("/ping", h.heartbeat)
+
+	return h, nil
+}
 
 func (h *Handler) updateMetricWithURL(w http.ResponseWriter, r *http.Request) {
 	metricType := model.MetricType(chi.URLParam(r, "metricType"))
@@ -232,4 +285,16 @@ func (h *Handler) getMetricList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	_ = t.Execute(w, data)
+}
+
+func (h *Handler) heartbeat(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 100*time.Millisecond)
+	defer cancel()
+
+	if err := h.Server.Heartbeat(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
