@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/db"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/config"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/db"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/file"
 )
 
 func NewMetricStorager(ctx context.Context, cfg *config.Config) (storage.MetricStorage, error) {

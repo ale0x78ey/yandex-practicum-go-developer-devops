@@ -6,10 +6,10 @@ import (
 
 	"github.com/caarlos0/env/v6"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/agent"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/db"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/service/agent"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/db"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/file"
 )
 
 type Config struct {

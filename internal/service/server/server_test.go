@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
-	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
+	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/mock"
 )
 
 func TestNewServer(t *testing.T) {

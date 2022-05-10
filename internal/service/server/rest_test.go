@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/pkg/testutils"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
-	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/mock"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/common/testutils"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage"
+	storagemock "github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/mock"
 )
 
 func TestNewHandler(t *testing.T) {

@@ -13,8 +13,8 @@ import (
 	mw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/middleware"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/middleware"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
 )
 
 type Handler struct {

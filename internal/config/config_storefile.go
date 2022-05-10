@@ -3,7 +3,7 @@ package config
 import (
 	"flag"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage/file"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/file"
 )
 
 const (

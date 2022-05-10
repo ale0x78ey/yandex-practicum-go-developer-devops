@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/config"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/agent"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/config"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/service/agent"
 )
 
 const (

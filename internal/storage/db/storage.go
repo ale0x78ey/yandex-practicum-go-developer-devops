@@ -9,7 +9,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/pgx"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
 )
 
 type Config struct {

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/storage"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage"
 )
 
 const (

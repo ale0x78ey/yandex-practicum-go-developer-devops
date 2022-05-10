@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
 )
 
 const (

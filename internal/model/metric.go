@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/pkg"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/common"
 )
 
 type (
@@ -123,7 +123,7 @@ func (m Metric) ProcessHash(key string) (string, error) {
 		return "", fmt.Errorf("unkown MetricType: %s", m.MType)
 	}
 
-	hash, err := pkg.Hash([]byte(data), []byte(key))
+	hash, err := common.Hash([]byte(data), []byte(key))
 	if err != nil {
 		return "", err
 	}

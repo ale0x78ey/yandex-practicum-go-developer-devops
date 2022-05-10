@@ -3,7 +3,7 @@ package config
 import (
 	"flag"
 
-	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/service/server"
 )
 
 func NewServerConfig() *server.Config {

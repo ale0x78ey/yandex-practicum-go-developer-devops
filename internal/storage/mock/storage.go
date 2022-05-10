@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/ale0x78ey/yandex-practicum-go-developer-devops/model"
+	model "github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
 	gomock "github.com/golang/mock/gomock"
 )
 
