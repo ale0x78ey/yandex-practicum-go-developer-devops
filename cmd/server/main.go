@@ -2,22 +2,34 @@ package main
 
 import (
 	"context"
-	"flag"
+	"errors"
 	"log"
+	"net/http"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/config"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/service/server"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/db"
+	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/storage/file"
 )
 
-const (
-	defaultShutdownTimeout = 3 * time.Second
-	defaultServerAddress   = "127.0.0.1:8080"
-	defaultInitStore       = true
-	defaultStoreInterval   = 300 * time.Second
-	defaultStoreFile       = "/tmp/devops-metrics-db.json"
-)
+func NewMetricStorager(ctx context.Context, cfg *config.Config) (storage.MetricStorage, error) {
+	if cfg == nil {
+		return nil, errors.New("invalid cfg value: nil")
+	}
+
+	if cfg.DB != nil && cfg.DB.DSN != "" {
+		return db.NewMetricStorage(ctx, *cfg.DB)
+	}
+
+	if cfg.StoreFile != nil && cfg.StoreFile.StoreFile != "" {
+		return file.NewMetricStorage(*cfg.StoreFile)
+	}
+
+	return nil, errors.New("missing config options for a metric storager")
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(
@@ -28,26 +40,41 @@ func main() {
 	)
 	defer stop()
 
-	config := restServerConfig{
-		ShutdownTimeout: defaultShutdownTimeout,
+	cfg := config.LoadServerConfig()
+	metricStorage, err := NewMetricStorager(ctx, cfg)
+	if err != nil {
+		log.Fatalf("Failed to create a metric storage: %v", err)
 	}
+	defer metricStorage.Close()
 
-	flag.StringVar(&config.ServerAddress, "a", defaultServerAddress, "ADDRESS")
-	flag.BoolVar(&config.InitStore, "r", defaultInitStore, "RESTORE")
-	flag.DurationVar(&config.StoreInterval, "i", defaultStoreInterval, "STORE_INTERVAL")
-	flag.StringVar(&config.StoreFile, "f", defaultStoreFile, "STORE_FILE")
-	flag.Parse()
-
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("Failed to parse REST server config options: %v", err)
+	if cfg.Server == nil {
+		log.Fatalf("Missing config for server")
 	}
-
-	server, err := newRestServer(config)
+	s, err := server.NewServer(*cfg.Server, metricStorage)
 	if err != nil {
 		log.Fatalf("Failed to create a server: %v", err)
 	}
 
-	if err := server.Run(ctx); err != nil {
-		log.Fatalf("Failed to run a server: %v", err)
+	h, err := server.NewHandler(s)
+	if err != nil {
+		log.Fatalf("Failed to create a handler: %v", err)
+	}
+
+	httpServer := &http.Server{
+		Addr:    cfg.HTTP.ServerAddress,
+		Handler: h.Router,
+	}
+
+	go func() {
+		if err := s.Run(ctx); err != nil {
+			log.Fatalf("Failed in a running server: %v", err)
+		}
+		if err := httpServer.Shutdown(ctx); err != nil {
+			log.Fatalf("HTTP Server failed: %v", err)
+		}
+	}()
+
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
 }
