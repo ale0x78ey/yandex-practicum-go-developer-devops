@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 
 	"github.com/ale0x78ey/yandex-practicum-go-developer-devops/internal/model"
 )
@@ -87,10 +89,11 @@ func NewAgent(config Config, updateURL string) (*Agent, error) {
 
 func (a *Agent) Run(ctx context.Context) error {
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 	defer wg.Wait()
 
 	go a.pollMetrics(ctx, wg)
+	go a.pollGopsutilMetrics(ctx, wg)
 	go a.postMetrics(ctx, wg)
 
 	return nil
@@ -154,6 +157,55 @@ func (a *Agent) pollMetrics(ctx context.Context, wg *sync.WaitGroup) {
 			a.pollCountMetric()
 		}
 	}
+}
+
+func (a *Agent) pollGopsutilMetrics(ctx context.Context, wg *sync.WaitGroup) {
+	ticker := time.NewTicker(a.config.PollInterval)
+	defer ticker.Stop()
+	defer wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := a.pollGopsutilMemoryMetrics(ctx); err != nil {
+				log.Printf("failed to poll gopsutil memory metrics: %v", err)
+			}
+
+			if err := a.pollGopsutilCPUMetrics(ctx); err != nil {
+				log.Printf("failed to poll gopsutil cpu metrics: %v", err)
+			}
+		}
+	}
+}
+
+func (a *Agent) pollGopsutilMemoryMetrics(ctx context.Context) error {
+	v, err := mem.VirtualMemoryWithContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	a.metrics <- model.MetricFromGauge("TotalMemory", model.Gauge(v.Total))
+	a.metrics <- model.MetricFromGauge("FreeMemory", model.Gauge(v.Free))
+
+	return nil
+}
+
+func (a *Agent) pollGopsutilCPUMetrics(ctx context.Context) error {
+	times, err := cpu.TimesWithContext(ctx, true)
+	if err != nil {
+		return err
+	}
+
+	for i, timesStat := range times {
+		a.metrics <- model.MetricFromGauge(
+			fmt.Sprintf("CPUutilization%d", i),
+			model.Gauge(timesStat.User+timesStat.System),
+		)
+	}
+
+	return nil
 }
 
 func (a *Agent) postOneMetric(ctx context.Context, metric model.Metric) error {
