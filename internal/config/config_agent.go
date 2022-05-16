@@ -13,6 +13,8 @@ func NewAgentConfig() *agent.Config {
 		RetryCount:          agent.DefaultRetryCount,
 		RetryWaitTime:       agent.DefaultRetryWaitTime,
 		RetryMaxWaitTime:    agent.DefaultRetryMaxWaitTime,
+		PollMetricsBuffSize: agent.DefaultPollMetricsBuffSize,
+		PostWorkersPoolSize: agent.DefaultPostWorkersPoolSize,
 	}
 
 	flag.DurationVar(&cfg.ReportInterval, "r", agent.DefaultReportInterval, "REPORT_INTERVAL")
