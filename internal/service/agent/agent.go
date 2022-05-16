@@ -50,6 +50,9 @@ func (c Config) Validate() error {
 	if c.ReportInterval <= 0 {
 		return fmt.Errorf("invalid non-positive ReportInterval=%v", c.ReportInterval)
 	}
+	if c.PostWorkersPoolSize <= 0 {
+		return fmt.Errorf("invalid non-positive PostWorkersPoolSize=%v", c.PostWorkersPoolSize)
+	}
 
 	return nil
 }
