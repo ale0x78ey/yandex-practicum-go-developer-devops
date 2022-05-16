@@ -50,6 +50,9 @@ func (c Config) Validate() error {
 	if c.ReportInterval <= 0 {
 		return fmt.Errorf("invalid non-positive ReportInterval=%v", c.ReportInterval)
 	}
+	if c.PollMetricsBuffSize < 0 {
+		return fmt.Errorf("invalid negative PollMetricsBuffSize=%v", c.PollMetricsBuffSize)
+	}
 	if c.PostWorkersPoolSize <= 0 {
 		return fmt.Errorf("invalid non-positive PostWorkersPoolSize=%v", c.PostWorkersPoolSize)
 	}
@@ -242,6 +245,8 @@ func (a *Agent) postMetrics(ctx context.Context, wg *sync.WaitGroup) {
 							if err := a.postOneMetric(ctx, metric); err != nil {
 								log.Printf("failed to post %v: %v", metric, err)
 							}
+						default:
+							break
 						}
 					}
 
