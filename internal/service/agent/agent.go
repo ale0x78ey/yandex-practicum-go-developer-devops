@@ -237,6 +237,7 @@ func (a *Agent) postMetrics(ctx context.Context, wg *sync.WaitGroup) {
 					signal.Wait()
 					signal.L.Unlock()
 
+				postLoop:
 					for {
 						select {
 						case <-ctx.Done():
@@ -246,7 +247,7 @@ func (a *Agent) postMetrics(ctx context.Context, wg *sync.WaitGroup) {
 								log.Printf("failed to post %v: %v", metric, err)
 							}
 						default:
-							break
+							break postLoop
 						}
 					}
 
